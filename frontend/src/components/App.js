@@ -33,15 +33,22 @@ class App extends Component {
 
   render() {
     return (
-      <ul>
-        {this.state.data.map(contact => {
-          return (
-            <li key={contact.id}>
-              {contact.name} - {contact.email}
-            </li>
-          );
-        })}
-      </ul>
+      <table>
+        <tbody>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+            {this.state.data.map(contact => {
+              return (
+                <tr key={contact.id}>
+                    <td style={{"margin": "1px", "padding": "5px"}}>{contact.name}</td>
+                    <td style={{"color": "blue","margin": "1px", "padding": "5px"}}>{contact.email}</td>
+                </tr>
+              );
+            })}
+        </tbody>
+      </table>
     );
   }
 }
