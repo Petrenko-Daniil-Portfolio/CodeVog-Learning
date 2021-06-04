@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG')
+DEBUG = env.bool('DEBUG') # Some comment
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'leads.apps.LeadsConfig',
-    'rest_framework'
+    'rest_framework',
+    'frontend',
 ]
 
 MIDDLEWARE = [
