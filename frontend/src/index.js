@@ -1,2 +1,2 @@
-import App from "./components/App";
-import Test from "./components/Test";
+//import App from "./components/App";
+import Registration from './components/Registration';

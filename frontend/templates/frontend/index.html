@@ -1,20 +1,16 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Django REST with React</title>
-</head>
-<body>
-<div id="app">
-    <!-- React will load here -->
-</div>
+{% extends "frontend/base.html" %}
 
-<div id="test">
-    <!-- My rect component goes here-->
-</div>
+{% block head %}
+    <title>Django REST with React</title>
+{% endblock %}
 
-</body>
-{% load static %}
-<script src="{% static 'frontend/main.js' %}"></script> <!-- made some changes here -->
-</html>
+{%block content %}
+    <div id="reg">
+        <!-- React will load here -->
+    </div>
+    <div class="error">{{login}}</div>
+{% endblock %}
+
+
+
+
