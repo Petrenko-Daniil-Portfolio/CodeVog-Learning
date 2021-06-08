@@ -1,6 +1,8 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import ugettext_lazy as _
 
+from django.contrib.auth.hashers import make_password
+
 
 class LeadManager(BaseUserManager):
     def create_user(self, email, password, **extra_fields):
@@ -8,10 +10,10 @@ class LeadManager(BaseUserManager):
             raise ValueError(_('The Email must be set'))
 
         email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
-        user.create_user()
-        return user
+        lead = self.model(email=email, **extra_fields)
+        lead.set_password(password)
+        lead.save(using=self._db)
+        return lead
 
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
@@ -22,4 +24,5 @@ class LeadManager(BaseUserManager):
             raise ValueError(_('Superuser must have is_staff=True.'))
         if extra_fields.get('is_superuser') is not True:
             raise ValueError(_('Superuser must have is_superuser=True.'))
+
         return self.create_user(email, password, **extra_fields)
