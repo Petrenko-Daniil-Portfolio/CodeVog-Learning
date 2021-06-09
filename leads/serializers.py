@@ -10,7 +10,11 @@ from rest_framework.exceptions import AuthenticationFailed
 class LeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
-        fields = ('id', 'username', 'email', 'message')
+        fields = '__all__'
+
+    def create(self, validated_data):
+        lead = Lead.objects.create_user(username=validated_data['username'], email=validated_data['email'])
+        lead.save()
 
 
 class LoginSerializer(serializers.ModelSerializer):

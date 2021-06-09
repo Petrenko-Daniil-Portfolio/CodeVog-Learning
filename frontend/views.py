@@ -24,6 +24,7 @@ def index(request):
             return redirect('user_page', user_name=user.email)
 
         except:
+
             user = authenticate(email=email, password=password)
             login(request, user)
             if user is not None:
