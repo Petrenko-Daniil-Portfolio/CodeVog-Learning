@@ -21,6 +21,7 @@
     "webpack-cli": "^4.7.0"
   },
   "dependencies": {
-    "django-react-csrftoken": "^1.0.4"
+    "django-react-csrftoken": "^1.0.4",
+    "react-router-dom": "^5.2.0"
   }
 }
