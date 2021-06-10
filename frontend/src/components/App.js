@@ -1,12 +1,24 @@
 import React, { Component } from "react";
 import { render } from "react-dom";
 
-import ReactRouter from './index'
+import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
+import Navbar from './Navbar';
+import Login from './LoginPage';
+import Logout from './LogoutPage';
+import Dashboard from './Dashboard';
 
 function App () {
     return (
         <div>
-            <ReactRouter />
+            <Router>
+                <Navbar / >
+
+                <Switch>
+                    <Route path='/login' component={Login} exact />
+                    <Route path='/logout' component={Logout} exact />
+                </Switch>
+
+            </Router>
         </div>
     );
 }

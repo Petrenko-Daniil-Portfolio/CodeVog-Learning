@@ -9,14 +9,10 @@ const ReactRouter = () => {
     return (
         <Router>
             <Switch>
-
                 <Route path='/'>
                     <Login/>
-                </Route>
-
-
-
-            </Switch>
+                </Switch>
+            </Route>
         </Router>
     );
 };
