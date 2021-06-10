@@ -14,11 +14,26 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.views.generic import TemplateView
+
+# frontend_modules = {
+#     'app': {
+#         'url': '',
+#         'view': 'index.html',
+#     }
+# }
+#
+# frontend_urls = []
+# for module_name, module_data in frontend_modules.items():
+#     frontend_urls.append(re_path(
+#         module_data['url'],
+#         TemplateView.as_view(template_name=module_data['view']),
+#         name=module_name))
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('', include('leads.urls')),
-    path('', include('frontend.urls')),
+    # path('', include('frontend.urls')),
 ]

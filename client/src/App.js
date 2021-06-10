@@ -2,10 +2,10 @@ import React, { Component } from "react";
 import { render } from "react-dom";
 
 import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
-import Navbar from './Navbar';
-import Login from './LoginPage';
-import Logout from './LogoutPage';
-import Dashboard from './Dashboard';
+import Navbar from './components/layout/Navbar';
+import Login from './views/auth/LoginPage';
+import Logout from './views/auth/LogoutPage';
+import Dashboard from './views/app/Dashboard';
 
 function App () {
     return (

@@ -39,7 +39,7 @@ const Login = () => {
         if (data.key) {
           localStorage.clear();
           localStorage.setItem('token', data.key);
-          window.location.replace('http://localhost:8000/dashboard');
+          window.location.replace('http://localhost:3000/dashboard');
         } else {
           setEmail('');
           setPassword('');
@@ -56,7 +56,7 @@ const Login = () => {
       <h1>Signin</h1>
       {errors === true && <h2>Cannot signup with provided credentials</h2>}
       {loading === false && (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}> <DjangoCSRFToken/>
           <label htmlFor='email'>Email address:</label> <br />
           <input
             name='email'
