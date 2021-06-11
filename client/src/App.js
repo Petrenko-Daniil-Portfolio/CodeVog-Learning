@@ -14,9 +14,11 @@ function App () {
                 <Navbar / >
 
                 <Switch>
-                    <Route path='/login' component={Login} exact />
-                    <Route path='/logout' component={Logout} exact />
-                    <Route path='/dashboard' component={Dashboard} exact />
+                    <Route exact path='/login' component={Login} />
+                    <Route exact path='/logout' component={Logout} />
+                    <Route exact path='/dashboard' component={Dashboard} />
+
+                    <Route exact path='/fin_instruments/:id' component={Dashboard} />
                 </Switch>
 
             </Router>

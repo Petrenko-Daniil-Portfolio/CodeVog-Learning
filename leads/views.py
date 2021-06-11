@@ -5,6 +5,11 @@ from rest_framework import generics
 # Create your views here.
 
 
-class LeadListCreate(generics.ListCreateAPIView):
+class GetAllLeads(generics.ListCreateAPIView):
+    queryset = Lead.objects.all()
+    serializer_class = LeadSerializer
+
+
+class GetOneLead(generics.RetrieveAPIView):
     queryset = Lead.objects.all()
     serializer_class = LeadSerializer

@@ -3,11 +3,37 @@ import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [isAuth, setIsAuth] = useState(false);
+  const [user, setUser] = useState('');
 
   useEffect(() => {
     if (localStorage.getItem('token') !== null) {
       setIsAuth(true);
+      //Get user
+      fetch('http://127.0.0.1:8000/api/lead/auth/user/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Token ${localStorage.getItem('token')}`
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          fetch('http://127.0.0.1:8000/api/lead/'+data.pk, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Token ${localStorage.getItem('token')}`
+            }
+          })
+            .then(res => res.json())
+            .then(data => {
+                setUser(data);
+
+            })
+
+        });
     }
+
   }, []);
 
   return (
@@ -18,7 +44,14 @@ const Navbar = () => {
           <Fragment>
             {' '}
             <li>
-              <Link to='/dashboard'>Dashboard</Link>
+                {user.is_staff === true ? (
+                    <Link to='/dashboard'>Clients</Link>
+                ) : (
+
+                    <Link to='/dashboard'>Financial Instruments</Link>
+                    )
+                }
+
             </li>
             <li>
               <Link to='/logout'>Logout</Link>

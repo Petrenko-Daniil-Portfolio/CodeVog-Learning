@@ -55,10 +55,10 @@ const Dashboard = () => {
                     </tr>
 
                     {leadList.map(lead => {
-                            if (lead.fin_advisor === user.pk && lead.id != lead.fin_advisor){
+                            if (lead.fin_advisor === user.pk && lead.id !== lead.fin_advisor){
                                 return (
                                     <tr key={lead.id}>
-                                        <td>{lead.username}</td>
+                                        <td> <a href={"/dashboard/"+lead.id}> {lead.username} </a> </td>
                                         <td>{lead.email}</td>
                                         <td>{lead.first_name} {lead.last_name}</td>
                                     </tr>
