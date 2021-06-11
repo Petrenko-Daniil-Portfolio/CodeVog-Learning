@@ -6,6 +6,7 @@ import Navbar from './components/layout/Navbar';
 import Login from './views/auth/LoginPage';
 import Logout from './views/auth/LogoutPage';
 import Dashboard from './views/app/Dashboard';
+import FinInstruments from './views/app/FinInstruments';
 
 function App () {
     return (
@@ -18,7 +19,7 @@ function App () {
                     <Route exact path='/logout' component={Logout} />
                     <Route exact path='/dashboard' component={Dashboard} />
 
-                    <Route exact path='/fin_instruments/:id' component={Dashboard} />
+                    <Route exact path='/fin_instruments/:id' component={FinInstruments} />
                 </Switch>
 
             </Router>
