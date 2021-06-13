@@ -10,6 +10,8 @@ const Login = () => {
 
   useEffect( () => {
     if (localStorage.getItem('token') !== null) {
+
+      //check if user is fin_advisor
       window.location.replace('http://localhost:3000/dashboard');
     } else {
       setLoading(false);

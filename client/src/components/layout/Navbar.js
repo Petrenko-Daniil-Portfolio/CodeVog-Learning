@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { Link } from 'react-router-dom';
+import './Navbar.css';
 
 const Navbar = () => {
   const [isAuth, setIsAuth] = useState(false);
@@ -37,36 +38,49 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav>
-      <h1>Django React Auth</h1>
-      <ul>
-        {isAuth === true ? (
-          <Fragment>
-            {' '}
-            <li>
-                {user.is_staff === true ? (
-                    <Link to='/dashboard'>Clients</Link>
+  <Fragment>
+    <div className="h-100 flex-shrink-0 p-3 bg-white-smoke" style={{width: "280px"}}>
+      <ul className="ist-unstyled ps-0">
+        <div className="mb-1">
+            <button className="btn btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" data-bs-target="#home-collapse" aria-expanded="true">
+                Menu
+            </button>
+            <div className="collapse show" id="home-collapse">
+                <ul className="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+
+                {isAuth === true ? (
+                  <Fragment>
+                    {' '}
+                    <li>
+                        {user.is_staff === true ? (
+                            <Link to='/dashboard' className="link-dark rounded">Clients</Link>
+                        ) : (
+
+                            <Link to={'/fin_instruments/'+user.id} className="link-dark rounded">Financial Instruments</Link>
+                            )
+                        }
+
+                    </li>
+                    <li>
+                      <Link to='/logout' className="link-dark rounded">Logout</Link>
+                    </li>
+                  </Fragment>
                 ) : (
+                  <Fragment>
+                    {' '}
+                    <li>
+                      <Link to='/login' className="link-dark rounded">Login</Link>
+                    </li>
+                  </Fragment>
+                )}
 
-                    <Link to='/dashboard'>Financial Instruments</Link>
-                    )
-                }
-
-            </li>
-            <li>
-              <Link to='/logout'>Logout</Link>
-            </li>
-          </Fragment>
-        ) : (
-          <Fragment>
-            {' '}
-            <li>
-              <Link to='/login'>Login</Link>
-            </li>
-          </Fragment>
-        )}
+                </ul>
+            </div>
+        </div>
       </ul>
-    </nav>
+    </div>
+    <div class="a-example-divider"></div>
+  </Fragment>
   );
 };
 

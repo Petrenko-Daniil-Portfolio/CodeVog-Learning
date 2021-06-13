@@ -21,8 +21,9 @@ const Dashboard = () => {
         .then(res => res.json())
         .then(data => {
           setUser(data);
-//          setLoading(false);
-        });
+
+        })
+
     //Get leads of fin_advisor
       fetch('http://127.0.0.1:8000/api/lead',{
         method: 'GET',
