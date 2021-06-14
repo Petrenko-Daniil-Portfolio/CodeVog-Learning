@@ -87,25 +87,35 @@ const FinInstruments = (props) => {
     return (
         <div>
 
-        FinInstruments of {lead.id}
-        <table>
-            <tbody>
+        <h2> FinInstruments of <span style={{color: "#107896"}}><b> {lead.username} </b></span></h2>
+        <table className="table table-striped">
+            <thead>
                 <tr>
-                    <th>Symbol</th>
-                    <th>Quantity</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Region</th>
                     {user.is_staff === true &&
                         <th>Actions</th>
                     }
                 </tr>
+            </thead>
+
+            <tbody>
                  {finInstruments.map(finInstrument => {
                     return(
                         <tr key= {finInstrument.id} >
+                            <td> name </td>
                             <td> {finInstrument.symbol} </td>
                             <td> {finInstrument.quantity} </td>
+                            <td> type </td>
+                            <td> region </td>
 
                             {user.is_staff === true &&
                                 <td>
-                                    <a>Update</a>
+                                    <a>Update/</a>
+                                    <a>Delete</a>
                                 </td>
                             }
 

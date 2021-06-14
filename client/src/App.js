@@ -10,19 +10,28 @@ import FinInstruments from './views/app/FinInstruments';
 
 function App () {
     return (
-        <div>
-            <Router>
-                <Navbar / >
+        <div className="container-fluid">
+            <div className="row min-vh-100 flex-column flex-md-row">
 
-                <Switch>
-                    <Route exact path='/login' component={Login} />
-                    <Route exact path='/logout' component={Logout} />
-                    <Route exact path='/dashboard' component={Dashboard} />
+                <Router>
+                    <Navbar / >
 
-                    <Route exact path='/fin_instruments/:id' component={FinInstruments} />
-                </Switch>
+                    <main className='col px-0 flex-grow-1'>
+                        <div className='container py-3'>
 
-            </Router>
+                            <Switch>
+                                <Route exact path='/login' component={Login} />
+                                <Route exact path='/logout' component={Logout} />
+                                <Route exact path='/dashboard' component={Dashboard} />
+
+                                <Route exact path='/fin_instruments/:id' component={FinInstruments} />
+                            </Switch>
+
+                        </div>
+                    </main>
+                </Router>
+
+            </div>
         </div>
     );
 }

@@ -48,14 +48,16 @@ const Dashboard = () => {
             <Fragment>
               <h1>Dashboard</h1>
               <h2>Hello {user.email}!</h2>
-              <table>
-                <tbody>
+              <table className="table table-striped">
+                <thead>
                     <tr>
-                        <th>username</th>
-                        <th>Email</th>
-                        <th>Fullname</th>
+                        <th scope="col">Username</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Fullname</th>
                     </tr>
+                </thead>
 
+                <tbody>
                     {leadList.map(lead => {
                             if (lead.fin_advisor === user.pk && lead.id !== lead.fin_advisor){
                                 return (

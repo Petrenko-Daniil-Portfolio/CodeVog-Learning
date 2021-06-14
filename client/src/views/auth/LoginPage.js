@@ -11,7 +11,38 @@ const Login = () => {
   useEffect( () => {
     if (localStorage.getItem('token') !== null) {
 
-      //check if user is fin_advisor
+      //get user
+      fetch('http://127.0.0.1:8000/api/lead/auth/user/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Token ${localStorage.getItem('token')}`
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+             fetch('http://127.0.0.1:8000/api/lead/'+data.id, {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Token ${localStorage.getItem('token')}`
+                }
+             })
+             .then(res => res.json())
+             .then(user => {
+                if (user.is_staff === true){
+                    console.log("----------")
+                    console.log(user)
+                    window.location.replace('http://localhost:3000/dashboard');
+                }else{
+                    window.location.replace('http://localhost:3000/fin_instruments/'+user.id);
+                }
+             })
+
+
+        })
+
+      //
       window.location.replace('http://localhost:3000/dashboard');
     } else {
       setLoading(false);
@@ -41,7 +72,38 @@ const Login = () => {
         if (data.key) {
           localStorage.clear();
           localStorage.setItem('token', data.key);
-          window.location.replace('http://localhost:3000/dashboard');
+
+              //Get user
+              fetch('http://127.0.0.1:8000/api/lead/auth/user/', {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Token ${localStorage.getItem('token')}`
+                }
+              })
+                .then(res => res.json())
+                .then(data => {
+                  fetch('http://127.0.0.1:8000/api/lead/'+data.pk, {
+                    method: 'GET',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Token ${localStorage.getItem('token')}`
+                    }
+                  })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.is_staff === true){
+                            window.location.replace('http://localhost:3000/dashboard');
+                        }
+                        else{
+                            window.location.replace('http://localhost:3000/fin_instruments/'+data.id);
+                        }
+
+                    })
+
+                });
+
+//          window.location.replace('http://localhost:3000/dashboard');
         } else {
           setEmail('');
           setPassword('');

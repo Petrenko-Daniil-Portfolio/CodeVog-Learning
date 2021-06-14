@@ -39,21 +39,19 @@ const Navbar = () => {
 
   return (
   <Fragment>
-    <div className="h-100 flex-shrink-0 p-3 bg-white-smoke" style={{width: "280px"}}>
-      <ul className="ist-unstyled ps-0">
-        <div className="mb-1">
-            <button className="btn btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" data-bs-target="#home-collapse" aria-expanded="true">
-                Menu
-            </button>
-            <div className="collapse show" id="home-collapse">
-                <ul className="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+
+
+        <aside className="col-12 col-md-3 col-xl-2 p-0 bg-dark flex-shrink-1">
+          <nav className='navbar navbar-expand-md navbar-dark bd-dark flex-md-column flex-row align-items center py-2 text-center sticky-top' id="sidebar">
+
+
 
                 {isAuth === true ? (
                   <Fragment>
                     {' '}
                     <li>
                         {user.is_staff === true ? (
-                            <Link to='/dashboard' className="link-dark rounded">Clients</Link>
+                            <Link to='/dashboard' className="nav-link">Clients</Link>
                         ) : (
 
                             <Link to={'/fin_instruments/'+user.id} className="link-dark rounded">Financial Instruments</Link>
@@ -62,24 +60,24 @@ const Navbar = () => {
 
                     </li>
                     <li>
-                      <Link to='/logout' className="link-dark rounded">Logout</Link>
+                      <Link to='/logout' className="nav-link">Logout</Link>
                     </li>
                   </Fragment>
                 ) : (
                   <Fragment>
                     {' '}
                     <li>
-                      <Link to='/login' className="link-dark rounded">Login</Link>
+                      <Link to='/login' className="nav-link">Login</Link>
                     </li>
                   </Fragment>
                 )}
 
-                </ul>
-            </div>
-        </div>
-      </ul>
-    </div>
-    <div class="a-example-divider"></div>
+
+          </nav>
+        </aside>
+
+
+
   </Fragment>
   );
 };
