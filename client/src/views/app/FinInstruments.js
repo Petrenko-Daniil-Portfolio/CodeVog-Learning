@@ -83,20 +83,12 @@ const FinInstruments = (props) => {
                           .then(res => res.json())
                           .then(instrument => {
 
+                            instrument['quantity'] = portfolioList[row].quantity
                             instruments.push(instrument)
 
                           })
 
                         }
-
-
-                        console.log("+")
-                        console.log(instruments)
-                        console.log(portfolioList)
-                        for (var i=0; i<finInstruments.length; i++){
-                            finInstruments[i]['quantity'] = portfolioList[i].quantity
-                        }
-
                         setFinInstruments(instruments)
                     })
 

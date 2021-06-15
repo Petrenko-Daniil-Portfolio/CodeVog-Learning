@@ -5,6 +5,8 @@ urlpatterns = [
     path('api/lead/', views.GetAllLeads.as_view()),
     path('api/lead/<pk>/', views.GetOneLead.as_view()),  # get single lead
     path('api/lead/<lead_id>/portfolio', views.portfolio_rows_of_lead),  # get portfolio rows of lead
+
+    path('api/lead/fin_instrument/', views.GetAllInstruments.as_view()),  # create instruments
     path('api/lead/fin_instrument/<pk>', views.GetOneInstrument.as_view()),  # get single fin_instrument
 
 

@@ -17,6 +17,11 @@ class GetOneLead(generics.RetrieveAPIView):
     serializer_class = LeadSerializer
 
 
+class GetAllInstruments(generics.ListCreateAPIView):
+    queryset = Instrument.objects.all()
+    serializer_class = InstrumentSerializer
+
+
 class GetOneInstrument(generics.RetrieveAPIView):
     queryset = Instrument.objects.all()
     serializer_class = InstrumentSerializer
