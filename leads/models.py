@@ -6,6 +6,8 @@ from .managers import LeadManager
 
 from django.contrib.auth.hashers import make_password
 
+from django.core.validators import MinValueValidator
+
 # Create your models here.
 
 
@@ -18,6 +20,8 @@ class Lead(AbstractUser):
 
     created_at = models.DateTimeField(auto_now=True)
 
+    #portfolio = models.ForeignKey('Portfolio', on_delete=models.CASCADE, null=True, blank=True)  # change to false later
+
     USERNAME_FIELD = 'email'
 
     REQUIRED_FIELDS = []
@@ -25,10 +29,31 @@ class Lead(AbstractUser):
     objects = LeadManager()
 
     def save(self, *args, **kwargs):
-        self.password = make_password(self.password)
+        if self.apikey is None:
+            self.password = make_password(self.password)
         super(Lead, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.email
+
+
+class Portfolio(models.Model):
+    user = models.ForeignKey('Lead', on_delete=models.CASCADE, null=False)
+    instrument = models.ForeignKey('Instrument', on_delete=models.DO_NOTHING, null=True) # change to false later
+    quantity = models.IntegerField(validators=[MinValueValidator(0.0)])
+
+
+class Instrument(models.Model):
+    name = models.CharField(max_length=50)
+    symbol = models.CharField(max_length=20, unique=True)
+    apikey = models.CharField(max_length=100, unique=True)
+
+    type = models.CharField(max_length=50, null=True)
+    region = models.CharField(max_length=50, null=True)
+    currency = models.CharField(max_length=3, null=True)
+
+    def __str__(self):
+        return self.name
+
 
 

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Lead
+from .models import Lead, Portfolio, Instrument
 
 from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed
@@ -17,23 +17,40 @@ class LeadSerializer(serializers.ModelSerializer):
         lead.save()
 
 
-class LoginSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField()
-    password = serializers.CharField()
+class InstrumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Instrument
+        fields = '__all__'
+
+
+class PortfolioSerializer(serializers.ModelSerializer):
+    # user = LeadSerializer()
+    # instrument_set = InstrumentSerializer(many=True)
 
     class Meta:
-        model: Lead
-        fields = ['email', 'password']
+        model = Portfolio
+        fields = ('user', 'quantity', 'instrument')
 
-    def validate(self, attrs):
-        email = attrs.get('emil')
-        password = attrs.get('password')
-        user = auth.authenticate(email=email, password=password)
 
-        if not user:
-            raise AuthenticationFailed("Invalid credentials")
 
-        return {
-            'email': user.email,
-            'username': user.username
-        }
+
+# class LoginSerializer(serializers.ModelSerializer):
+#     email = serializers.EmailField()
+#     password = serializers.CharField()
+#
+#     class Meta:
+#         model: Lead
+#         fields = ['email', 'password']
+#
+#     def validate(self, attrs):
+#         email = attrs.get('emil')
+#         password = attrs.get('password')
+#         user = auth.authenticate(email=email, password=password)
+#
+#         if not user:
+#             raise AuthenticationFailed("Invalid credentials")
+#
+#         return {
+#             'email': user.email,
+#             'username': user.username
+#         }
