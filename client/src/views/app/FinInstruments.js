@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Fragment } from 'react';
+import AddInstrument from './AddInstrument';
 
 const FinInstruments = (props) => {
     const [user, setUser] = useState('');
@@ -73,7 +74,7 @@ const FinInstruments = (props) => {
 
                         for (var row=0; row<portfolioList.length; row++){
 
-                          await fetch('http://127.0.0.1:8000/api/lead/fin_instrument/'+portfolioList[row].instrument, {
+                          await fetch('http://127.0.0.1:8000/api/fin_instrument/'+portfolioList[row].instrument, {
                             method: 'GET',
                             headers: {
                               'Content-Type': 'application/json',
@@ -99,11 +100,34 @@ const FinInstruments = (props) => {
         }
     }, []);
 
+    const updateInstrument = (instrument_to_update) => {
+
+        let new_finInstruments = [...finInstruments]
+
+        for (var i in new_finInstruments){
+
+            if (instrument_to_update.instrument === new_finInstruments[i].id){
+                new_finInstruments[i].quantity = instrument_to_update.quantity
+            }
+
+        }
+
+        setFinInstruments(new_finInstruments)
+    }
+
 
     return (
         <div>
 
         <h2> FinInstruments of <span style={{color: "#107896"}}><b> {lead.username} </b></span></h2>
+        <br />
+
+        {user.is_staff === true &&
+            <AddInstrument updInstrument={updateInstrument}  user_id={user.id} portfolio={portfolio} />
+        }
+
+        <br />
+
         <table className="table table-striped">
 
             <thead>
@@ -122,8 +146,8 @@ const FinInstruments = (props) => {
             <tbody>
 
                  {finInstruments.map( finInstrument => {
-                    {console.log("-")}
-                    {console.log(finInstrument)}
+//                    {console.log("-")}
+//                    {console.log(finInstrument)}
                     return(
                         <tr key= {finInstrument.id} >
                             <td> {finInstrument.name} </td>

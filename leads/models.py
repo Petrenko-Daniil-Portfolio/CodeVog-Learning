@@ -39,7 +39,7 @@ class Lead(AbstractUser):
 
 class Portfolio(models.Model):
     user = models.ForeignKey('Lead', on_delete=models.CASCADE, null=False)
-    instrument = models.ForeignKey('Instrument', on_delete=models.DO_NOTHING, null=True) # change to false later
+    instrument = models.ForeignKey('Instrument', on_delete=models.DO_NOTHING, null=True)  # change to false later
     quantity = models.IntegerField(validators=[MinValueValidator(0.0)])
 
 

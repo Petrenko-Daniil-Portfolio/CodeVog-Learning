@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework.authtoken',
+    'django_filters',  # did not work for some reason
     'rest_auth',
     'django.contrib.sites',
     'allauth',

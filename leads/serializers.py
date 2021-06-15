@@ -29,7 +29,15 @@ class PortfolioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Portfolio
-        fields = ('user', 'quantity', 'instrument')
+        fields = ('user', 'quantity', 'instrument', 'id')
+
+    def update(self, instance, validated_data):
+        instance.user = validated_data.get('user', instance.user)
+        instance.quantity = validated_data.get('quantity', instance.quantity)
+        instance.instrument = validated_data.get('instrument', instance.instrument)
+
+        instance.save()
+        return instance
 
 
 
