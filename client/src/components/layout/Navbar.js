@@ -47,19 +47,26 @@ const Navbar = () => {
 
 
                 {isAuth === true ? (
-                  <Fragment>
+                    <Fragment>
                     {' '}
-                    <li>
+
                         {user.is_staff === true ? (
-                            <Link to='/dashboard' className="nav-link">Clients</Link>
+                            <li>
+                                <Link to='/dashboard' className="nav-link">Clients</Link>
+                            </li>
                         ) : (
-
-                            <Link to={'/fin_instruments/'+user.id} className="nav-link">Financial Instruments</Link>
-
+                            <Fragment>
+                                <li>
+                                    <Link to={'/time_series/'+user.id} className="nav-link">Time Series</Link>
+                                </li>
+                                <li>
+                                    <Link to={'/fin_instruments/'+user.id} className="nav-link">Financial Instruments</Link>
+                                </li>
+                            </Fragment>
                             )
                         }
 
-                    </li>
+
                     <li>
                       <Link to='/logout' className="nav-link">Logout</Link>
                     </li>

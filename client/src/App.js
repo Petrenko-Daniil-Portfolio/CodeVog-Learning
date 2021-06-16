@@ -7,6 +7,7 @@ import Login from './views/auth/LoginPage';
 import Logout from './views/auth/LogoutPage';
 import Dashboard from './views/app/Dashboard';
 import FinInstruments from './views/app/FinInstruments';
+import TimeSeries from './views/app/TimeSeries.js'
 
 function App () {
     return (
@@ -25,6 +26,7 @@ function App () {
                                 <Route exact path='/dashboard' component={Dashboard} />
 
                                 <Route exact path='/fin_instruments/:id' component={FinInstruments} />
+                                <Route exact path='/time_series/:id' component={TimeSeries} />
                             </Switch>
 
                         </div>
