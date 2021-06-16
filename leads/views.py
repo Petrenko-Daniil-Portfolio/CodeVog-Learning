@@ -38,7 +38,7 @@ class GetOneInstrument(generics.RetrieveAPIView):
     # lookup_field = ['pk', 'name', 'symbol']
 
 
-class PortfolioView(generics.RetrieveUpdateAPIView):
+class PortfolioView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Portfolio.objects.all()
     serializer_class = PortfolioSerializer
 

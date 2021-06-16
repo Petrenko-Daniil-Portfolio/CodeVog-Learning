@@ -100,20 +100,16 @@ const FinInstruments = (props) => {
         }
     }, []);
 
-    const updateInstrument = (instrument_to_update, add=false, portfolio_to_update=null) => {
-        if (add === true) {
-            let new_portfolio = [...portfolio]
-            new_portfolio.push(portfolio_to_update)
-
-            setPortfolio(new_portfolio)
+    const updateInstrument = (instrument_to_update, status=null, portfolio_to_update=null) => {
+        if (status === 'create' && portfolio_to_update!==null) {
 
             let new_finInstruments = [...finInstruments]
             instrument_to_update['quantity'] = portfolio_to_update['quantity']
             new_finInstruments.push(instrument_to_update)
 
-            setFinInstruments(new_finInstruments) //TODO: place this line in the end of func
+            setFinInstruments(new_finInstruments)
 
-        }else{
+        }else if ( status==='update' ){
 
             let new_finInstruments = [...finInstruments]
 
@@ -124,10 +120,59 @@ const FinInstruments = (props) => {
                 }
 
             }
-
         setFinInstruments(new_finInstruments)
 
+        }else if ( status==='add' && portfolio_to_update!==null){
+        //instrument already exists we need to add it
+            let new_portfolio = [...portfolio]
+            new_portfolio.push(portfolio_to_update)
+
+            let new_finInstruments = [...finInstruments]
+            instrument_to_update['quantity'] = portfolio_to_update['quantity']
+            new_finInstruments.push(instrument_to_update)
+
+            setFinInstruments(new_finInstruments)
+
+        }else{
+            alert('you made a mistake while passing parameters to updateInstrument')
         }
+
+    }
+
+    const deleteInstrument = (fin_instrument_id) => {
+        //we are not delete the instrument but portfolio row with such instrument
+        let portfolio_to_delete = null
+        let new_portfolio = []
+        let new_finInstruments = []
+
+        for (let index in portfolio){
+            if (portfolio[index].instrument === fin_instrument_id ){
+                portfolio_to_delete = portfolio[index].id
+            }else{
+                new_portfolio.push(portfolio[index])
+            }
+        }
+
+        for (let i in finInstruments){
+            if (finInstruments[i].id != fin_instrument_id){
+                new_finInstruments.push(finInstruments[i])
+            }
+        }
+
+        let portfolio_req_url = 'http://127.0.0.1:8000/api/portfolio/'+portfolio_to_delete
+        fetch(portfolio_req_url, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+
+        .then( () => {
+
+            setPortfolio(new_portfolio)
+            setFinInstruments(new_finInstruments)
+        })
+
 
     }
 
@@ -172,8 +217,7 @@ const FinInstruments = (props) => {
 
                             {user.is_staff === true &&
                                 <td>
-                                    <a>Update/</a>
-                                    <a>Delete</a>
+                                    <button onClick={ () => deleteInstrument(finInstrument.id)} className="btn btn-outline-danger">Delete</button>
                                 </td>
                             }
 

@@ -29,7 +29,7 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
     })
     .then(res => res.json())
     .then( async (data) => {
-
+        //data is instrument we seatched
         //id data == 0 we have no such instrument in our db
         if(data.length == 0){
             /*
@@ -69,10 +69,11 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
                 }
             }
 
-            instrument_to_upd.quantity = quantity
+
 
             //lead already has such tool -> we need to update quantity
             if (instrument_to_upd != null){
+                instrument_to_upd.quantity = quantity
                 fetch('http://127.0.0.1:8000/api/portfolio/'+instrument_to_upd.id, {
                     method: 'PUT',
                     headers: {
@@ -83,12 +84,36 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
                 .then(res => res.json())
                 .then(response_data => {
                     console.log(response_data)
-                    updInstrument(response_data)
+                    updInstrument(response_data, 'update')
                 })
             }
             else{
-                //we have such instrument in db but we need to add it to this list
+                //we have such instrument in db but we need to ADD it to this list
                 // create new portfolio raw with this fin tool and quantity
+
+                let new_portfolio = {}
+                new_portfolio['user'] = leadId
+                new_portfolio['instrument'] = data[0].id //data[0] is our  instrument
+                new_portfolio['quantity'] = quantity
+
+
+                //create new portfolio row
+                let portfolio_create_req_url = 'http://127.0.0.1:8000/api/portfolio/'
+                fetch(portfolio_create_req_url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(new_portfolio)
+                })
+                .then( res => res.json() )
+                .then( response_data => {
+                    //response_data is my portfolio
+                    //data is instrument
+                    updInstrument(data[0], 'add', response_data)
+
+                })
+
 
             }
 
@@ -100,7 +125,7 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
 
   const addInstrument = (instrument_info) => {
     /*
-        1) Create tool
+        1) CREATE tool
         2) Add tool to lead
         3) Clear fields
     */
@@ -144,7 +169,7 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
         .then( portfolio_res => portfolio_res.json())
         .then(portfolio_data => {
 
-            updInstrument(instrument_data, true, portfolio_data)
+            updInstrument(instrument_data, 'create', portfolio_data)
 
 
         })
@@ -167,10 +192,9 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
         <form onSubmit={handleSubmit}> <DjangoCSRFToken/>
                 <input placeholder="Symbol" name='symbol' value={symbol} onChange={e => setSymbol(e.target.value)} />
 
-                <input placeholder="Quantity" name='quantity' value={quantity} onChange={e => setQuantity(e.target.value)} />
+                <input placeholder="Quantity" name='quantity' value={quantity} onChange={e => setQuantity(e.target.value)} className='ms-1'/>
 
-                <input type="submit" value="Add Instrument"/>
-
+                <input type="submit" value="Add / Update" className="btn btn-info ms-2" />
         </form>
 
         <table className="table table-striped">

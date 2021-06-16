@@ -54,7 +54,8 @@ const Navbar = () => {
                             <Link to='/dashboard' className="nav-link">Clients</Link>
                         ) : (
 
-                            <Link to={'/fin_instruments/'+user.id} className="link-dark rounded">Financial Instruments</Link>
+                            <Link to={'/fin_instruments/'+user.id} className="nav-link">Financial Instruments</Link>
+
                             )
                         }
 
