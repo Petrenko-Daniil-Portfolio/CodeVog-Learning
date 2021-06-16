@@ -2,7 +2,7 @@ import React, { Component, useState, useEffect } from "react";
 import { render } from "react-dom";
 import DjangoCSRFToken from 'django-react-csrftoken'
 
-const AddInstrument = ({updInstrument, user_id, portfolio}) => {
+const AddInstrument = ({updInstrument, fin_advisor, portfolio}) => {
   const [name, setName] = useState('');
   const [symbol, setSymbol] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -33,6 +33,22 @@ const AddInstrument = ({updInstrument, user_id, portfolio}) => {
                 2) check result
                 3) create new instrument
              */
+            let apikey = fin_advisor.apikey.key
+            console.log(apikey)
+            let req_url = 'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords='+symbol+'&apikey='+apikey
+
+            //fetch to get data
+            fetch(req_url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(res => res.json())
+            .then( data => {
+                console.log(data)
+            })
+
         }else{
             /*
                 1) check if lead already has this instrument
@@ -67,6 +83,8 @@ const AddInstrument = ({updInstrument, user_id, portfolio}) => {
             }
             else{
                 //we have such instrument in db but we need to add it to this list
+                // create new portfolio raw with this fin tool and quantity
+
             }
 
         }

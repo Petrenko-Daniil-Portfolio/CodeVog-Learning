@@ -123,7 +123,7 @@ const FinInstruments = (props) => {
         <br />
 
         {user.is_staff === true &&
-            <AddInstrument updInstrument={updateInstrument}  user_id={user.id} portfolio={portfolio} />
+            <AddInstrument updInstrument={updateInstrument}  fin_advisor={user} portfolio={portfolio}  />
         }
 
         <br />
