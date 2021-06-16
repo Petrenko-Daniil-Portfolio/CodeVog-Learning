@@ -7,6 +7,9 @@ from rest_framework.response import Response
 
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.mixins import CreateModelMixin
+
+from django.shortcuts import get_object_or_404
 import django_filters
 # Create your views here.
 
@@ -36,6 +39,11 @@ class GetOneInstrument(generics.RetrieveAPIView):
 
 
 class PortfolioView(generics.RetrieveUpdateAPIView):
+    queryset = Portfolio.objects.all()
+    serializer_class = PortfolioSerializer
+
+
+class PortfolioCreateView(generics.ListCreateAPIView):
     queryset = Portfolio.objects.all()
     serializer_class = PortfolioSerializer
 

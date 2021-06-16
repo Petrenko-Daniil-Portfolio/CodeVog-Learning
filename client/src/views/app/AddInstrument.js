@@ -2,22 +2,26 @@ import React, { Component, useState, useEffect } from "react";
 import { render } from "react-dom";
 import DjangoCSRFToken from 'django-react-csrftoken'
 
-const AddInstrument = ({updInstrument, fin_advisor, portfolio}) => {
-  const [name, setName] = useState('');
+const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
   const [symbol, setSymbol] = useState('');
   const [quantity, setQuantity] = useState('');
 
   const [errors, setErrors] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect( () => {
+  //list of possible fin_instruments
+  const [options, setOptions] = useState([]);
+  const [apiKey, setApiKey] = useState('');
+  const [newInstrument, setNewInstrument] = useState({})
 
+  useEffect( () => {
+    //
   }, [])
 
   const handleSubmit = e => {
     e.preventDefault();
 
-    fetch('http://127.0.0.1:8000/api/fin_instrument/?symbol='+symbol+'&name='+name, {
+    fetch('http://127.0.0.1:8000/api/fin_instrument/?symbol='+symbol, {
         method: 'GET',
         headers: {
         'Content-Type': 'application/json'
@@ -46,7 +50,8 @@ const AddInstrument = ({updInstrument, fin_advisor, portfolio}) => {
             })
             .then(res => res.json())
             .then( data => {
-                console.log(data)
+                setOptions(data.bestMatches)
+                setApiKey(req_url)
             })
 
         }else{
@@ -91,30 +96,121 @@ const AddInstrument = ({updInstrument, fin_advisor, portfolio}) => {
 
 
     })
-
-
-
   };
+
+  const addInstrument = (instrument_info) => {
+    /*
+        1) Create tool
+        2) Add tool to lead
+        3) Clear fields
+    */
+    let instrument = {}
+
+
+    instrument['symbol'] = instrument_info['1. symbol']
+    instrument['name'] = instrument_info['2. name']
+    instrument['type'] = instrument_info['3. type']
+    instrument['region'] = instrument_info['4. region']
+    instrument['apikey'] = apiKey
+    instrument['currency'] = instrument_info['8. currency']
+
+    //create instrument
+    let instrument_req_url = 'http://127.0.0.1:8000/api/fin_instrument/'
+    fetch(instrument_req_url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(instrument)
+    })
+    .then(instrument_res => instrument_res.json())
+    .then( instrument_data => {
+
+        //add instrument to portfolio
+        let portfolio = {}
+        portfolio['user'] = leadId
+        portfolio['instrument'] = instrument_data.id //dinstrument_data.id - fin_instrument id
+        portfolio['quantity'] = quantity
+
+        let portfolio_req_url = 'http://127.0.0.1:8000/api/portfolio/'
+
+        fetch(portfolio_req_url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(portfolio)
+        })
+        .then( portfolio_res => portfolio_res.json())
+        .then(portfolio_data => {
+
+            updInstrument(instrument_data, true, portfolio_data)
+
+
+        })
+
+
+    })
+
+
+    setOptions([])
+    setSymbol('')
+    setQuantity('')
+  }
+
+
+
 
 
     return(
+      <div>
         <form onSubmit={handleSubmit}> <DjangoCSRFToken/>
-
-                <input placeholder="Name" name='name' value={name} onChange={e => setName(e.target.value)} />
-
-
-
                 <input placeholder="Symbol" name='symbol' value={symbol} onChange={e => setSymbol(e.target.value)} />
 
-
-
                 <input placeholder="Quantity" name='quantity' value={quantity} onChange={e => setQuantity(e.target.value)} />
-
-
 
                 <input type="submit" value="Add Instrument"/>
 
         </form>
+
+        <table className="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Region</th>
+                    <th scope="col">Actions</th>
+
+                </tr>
+            </thead>
+
+            <tbody>
+
+                 {console.log(options)}
+                 {options.map( (option, index) => {
+
+                    return(
+
+                        <tr key={index} >
+                            <td> {option['1. symbol']} </td>
+                            <td> {option['2. name']} </td>
+
+                            <td> {option['3. type']} </td>
+                            <td> {option['4. region']} </td>
+
+
+                            <td>
+                                <button onClick={ () => addInstrument(option)}  type="button" className="btn btn-outline-dark">Add</button>
+                            </td>
+
+
+                        </tr>
+                    );
+                })}
+            </tbody>
+        </table>
+      </div>
     )
 
 

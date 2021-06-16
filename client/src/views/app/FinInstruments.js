@@ -100,19 +100,35 @@ const FinInstruments = (props) => {
         }
     }, []);
 
-    const updateInstrument = (instrument_to_update) => {
+    const updateInstrument = (instrument_to_update, add=false, portfolio_to_update=null) => {
+        if (add === true) {
+            let new_portfolio = [...portfolio]
+            new_portfolio.push(portfolio_to_update)
 
-        let new_finInstruments = [...finInstruments]
+            setPortfolio(new_portfolio)
 
-        for (var i in new_finInstruments){
+            let new_finInstruments = [...finInstruments]
+            instrument_to_update['quantity'] = portfolio_to_update['quantity']
+            new_finInstruments.push(instrument_to_update)
 
-            if (instrument_to_update.instrument === new_finInstruments[i].id){
-                new_finInstruments[i].quantity = instrument_to_update.quantity
+            setFinInstruments(new_finInstruments) //TODO: place this line in the end of func
+
+        }else{
+
+            let new_finInstruments = [...finInstruments]
+
+            for (var i in new_finInstruments){
+
+                if (instrument_to_update.instrument === new_finInstruments[i].id){
+                    new_finInstruments[i].quantity = instrument_to_update.quantity
+                }
+
             }
+
+        setFinInstruments(new_finInstruments)
 
         }
 
-        setFinInstruments(new_finInstruments)
     }
 
 
@@ -123,7 +139,7 @@ const FinInstruments = (props) => {
         <br />
 
         {user.is_staff === true &&
-            <AddInstrument updInstrument={updateInstrument}  fin_advisor={user} portfolio={portfolio}  />
+            <AddInstrument leadId={lead.id} updInstrument={updateInstrument}  fin_advisor={user} portfolio={portfolio}  />
         }
 
         <br />
@@ -146,8 +162,6 @@ const FinInstruments = (props) => {
             <tbody>
 
                  {finInstruments.map( finInstrument => {
-//                    {console.log("-")}
-//                    {console.log(finInstrument)}
                     return(
                         <tr key= {finInstrument.id} >
                             <td> {finInstrument.name} </td>
