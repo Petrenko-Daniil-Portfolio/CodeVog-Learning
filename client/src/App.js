@@ -7,7 +7,8 @@ import Login from './views/auth/LoginPage';
 import Logout from './views/auth/LogoutPage';
 import Dashboard from './views/app/Dashboard';
 import FinInstruments from './views/app/FinInstruments';
-import TimeSeries from './views/app/TimeSeries.js'
+import TimeSeries from './views/app/TimeSeries.js';
+import NotFound from './views/app/NotFound';
 
 function App () {
     return (
@@ -17,7 +18,7 @@ function App () {
                 <Router>
                     <Navbar / >
 
-                    <main className='col px-0 flex-grow-1'>
+                    <main className='col px-0 flex-grow-1 overflow-scroll' >
                         <div className='container py-3'>
 
                             <Switch>
@@ -27,6 +28,8 @@ function App () {
 
                                 <Route exact path='/fin_instruments/:id' component={FinInstruments} />
                                 <Route exact path='/time_series/:id' component={TimeSeries} />
+
+                                <Route path="*" component={NotFound} />
                             </Switch>
 
                         </div>
