@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import AddInstrument from './AddInstrument';
+import * as Constants from '../dependencies';
 
 const FinInstruments = (props) => {
     const [user, setUser] = useState('');
@@ -12,11 +13,11 @@ const FinInstruments = (props) => {
 
     useEffect(  () => {
         if (localStorage.getItem('token') === null) {
-          window.location.replace('http://localhost:3000/login');
+          window.location.replace(Constants.SITE_URL+'login');
         } else {
 
         //Get user that entered page
-          fetch('http://127.0.0.1:8000/api/lead/auth/user/', {
+          fetch(Constants.SERVER_API+'lead/auth/user/', {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -25,7 +26,7 @@ const FinInstruments = (props) => {
           })
             .then(res => res.json())
             .then(data => {
-              fetch('http://127.0.0.1:8000/api/lead/'+data.pk, {
+              fetch(Constants.SERVER_API+'lead/'+data.pk, {
                 method: 'GET',
                 headers: {
                   'Content-Type': 'application/json',
@@ -40,7 +41,7 @@ const FinInstruments = (props) => {
             })
             .then( () => {
               //Get lead
-              fetch('http://127.0.0.1:8000/api/lead/'+props.match.params.id, {
+              fetch(Constants.SERVER_API+'lead/'+props.match.params.id, {
                 method: 'GET',
                 headers: {
                   'Content-Type': 'application/json',
@@ -53,12 +54,12 @@ const FinInstruments = (props) => {
 
                     //If user that entered page is not owner or staff -> redirect
                     if (user.id != lead.id && user.is_staff == false){
-                        window.location.replace('http://localhost:3000/login');
+                        window.location.replace(Constants.SITE_URL+'login');
 
                     }
 
                     //fetch for client`s fin instruments will go here
-                    fetch('http://127.0.0.1:8000/api/lead/'+data.id+'/portfolio', {
+                    fetch(Constants.SERVER_API+'lead/'+data.id+'/portfolio', {
                       method: 'GET',
                       headers: {
                         'Content-Type': 'application/json',
@@ -74,7 +75,7 @@ const FinInstruments = (props) => {
 
                         for (var row=0; row<portfolioList.length; row++){
 
-                          await fetch('http://127.0.0.1:8000/api/fin_instrument/'+portfolioList[row].instrument, {
+                          await fetch(Constants.SERVER_API+'fin_instrument/'+portfolioList[row].instrument, {
                             method: 'GET',
                             headers: {
                               'Content-Type': 'application/json',
@@ -134,7 +135,7 @@ const FinInstruments = (props) => {
             setFinInstruments(new_finInstruments)
 
         }else{
-            alert('you made a mistake while passing parameters to updateInstrument')
+            alert('You made a mistake while passing parameters to update the Instrument')
         }
 
     }
@@ -159,7 +160,7 @@ const FinInstruments = (props) => {
             }
         }
 
-        let portfolio_req_url = 'http://127.0.0.1:8000/api/portfolio/'+portfolio_to_delete
+        let portfolio_req_url = Constants.SERVER_API+'portfolio/'+portfolio_to_delete
         fetch(portfolio_req_url, {
             method: 'DELETE',
             headers: {

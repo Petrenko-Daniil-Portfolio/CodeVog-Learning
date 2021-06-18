@@ -43,9 +43,6 @@ const Navbar = () => {
 
         <aside className="col-12 col-md-3 col-xl-2 p-0 bg-dark flex-shrink-1">
           <nav className='navbar navbar-expand-md navbar-dark bd-dark flex-md-column flex-row align-items center py-2 text-center sticky-top' id="sidebar">
-
-
-
                 {isAuth === true ? (
                     <Fragment>
                     {' '}
@@ -66,7 +63,6 @@ const Navbar = () => {
                             )
                         }
 
-
                     <li>
                       <Link to='/logout' className="nav-link">Logout</Link>
                     </li>
@@ -75,17 +71,13 @@ const Navbar = () => {
                   <Fragment>
                     {' '}
                     <li>
-                      <Link to='/login' className="nav-link">Login</Link>
+                      <Link to='/login' className="nav-link" data-testid='Login'>Login</Link>
                     </li>
                   </Fragment>
                 )}
 
-
           </nav>
         </aside>
-
-
-
   </Fragment>
   );
 };

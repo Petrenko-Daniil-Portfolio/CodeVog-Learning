@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Fragment } from 'react';
+import * as Constants from '../dependencies';
 
 const Dashboard = () => {
   const [user, setUser] = useState('');
@@ -8,10 +9,10 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (localStorage.getItem('token') === null) {
-      window.location.replace('http://localhost:3000/login');
+      window.location.replace(Constants.SITE_URL+'login');
     } else {
     //Get fin_advisor
-      fetch('http://127.0.0.1:8000/api/lead/auth/user/', {
+      fetch(Constants.SERVER_API+'lead/auth/user/', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -25,7 +26,7 @@ const Dashboard = () => {
         })
 
     //Get leads of fin_advisor
-      fetch('http://127.0.0.1:8000/api/lead',{
+      fetch(Constants.SERVER_API+'lead',{
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

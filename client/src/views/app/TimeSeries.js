@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Fragment } from 'react';
+import * as Constants from '../dependencies';
 
 const TimeSeries = (props) =>{
     const [lead, setLead] = useState('');
@@ -12,9 +13,9 @@ const TimeSeries = (props) =>{
 
     useEffect( () =>{
         if (localStorage.getItem('token') === null) {
-          window.location.replace('http://localhost:3000/login');
+          window.location.replace(Constants.SITE_URL+'login');
         } else {
-            fetch('http://127.0.0.1:8000/api/lead/auth/user/', {
+            fetch(Constants.SERVER_API+'lead/auth/user/', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -24,10 +25,10 @@ const TimeSeries = (props) =>{
             .then( res => res.json() )
             .then( auth_user => {
                 if (auth_user.pk != props.match.params.id){
-                    window.location.replace('http://localhost:3000/time_series/'+auth_user.pk)
+                    window.location.replace(Constants.SITE_URL+'time_series/'+auth_user.pk)
                 }
 
-                fetch('http://127.0.0.1:8000/api/lead/'+auth_user.pk, {
+                fetch(Constants.SERVER_API+'lead/'+auth_user.pk, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -39,7 +40,7 @@ const TimeSeries = (props) =>{
                     setLead(lead)
 
                     //get lead fin_advisor
-                    fetch('http://127.0.0.1:8000/api/lead/'+lead.fin_advisor, {
+                    fetch(Constants.SERVER_API+'lead/'+lead.fin_advisor, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
@@ -52,7 +53,7 @@ const TimeSeries = (props) =>{
 
 
                         //get lead portfolio
-                        fetch('http://127.0.0.1:8000/api/lead/'+lead.id+'/portfolio', {
+                        fetch(Constants.SERVER_API+'lead/'+lead.id+'/portfolio', {
                           method: 'GET',
                           headers: {
                             'Content-Type': 'application/json',
@@ -64,7 +65,7 @@ const TimeSeries = (props) =>{
 
                             let new_finInstruments = []
                             for (let index in portfolio){
-                                await fetch('http://127.0.0.1:8000/api/fin_instrument/'+portfolio[index].instrument,{
+                                await fetch(Constants.SERVER_API+'fin_instrument/'+portfolio[index].instrument,{
                                     method: 'GET',
                                     headers: {
                                         'Content-Type': 'application/json'
@@ -102,7 +103,7 @@ const TimeSeries = (props) =>{
 
                             for (let i=0; i<new_finInstruments.length; i++){
 
-                                let req_url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol='+new_finInstruments[i].symbol+'&apikey='+fin_advisor.apikey.key
+                                let req_url = Constants.DATA_SOURCE_QUERY+'function=TIME_SERIES_DAILY&symbol='+new_finInstruments[i].symbol+'&apikey='+fin_advisor.apikey.key
 
                                 await fetch(req_url, {
                                     method: 'GET',
@@ -172,17 +173,28 @@ const TimeSeries = (props) =>{
                                 <th key={index} scope='col'>{instrument.symbol}</th>
                             )
                         })}
-
-
-
                     </tr>
+
+                    {error ==''&& loading == true &&
+
+                        <tr className='alert alert-info'><td colSpan={finInstruments.length+1}> Loading </td></tr>
+
+                    }
+
+                    {error !='' &&
+                        <tr className='alert alert-danger'><td colSpan={finInstruments.length+1}> {error} </td></tr>
+                    }
                 </thead>
 
 
                 <tbody id='tbody' hidden={loading}>
-                    {error !='' &&
-                        <tr className='alert alert-danger'><td colspan={finInstruments.length+1}> {error} </td></tr>
+
+                    {loading &&
+
+                        <tr className='alert alert-info'><td colSpan={finInstruments.length+1}> Loading </td></tr>
+
                     }
+
 
                 </tbody>
 

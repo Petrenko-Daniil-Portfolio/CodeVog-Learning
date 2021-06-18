@@ -1,6 +1,7 @@
 import React, { Component, useState, useEffect } from "react";
 import { render } from "react-dom";
 import DjangoCSRFToken from 'django-react-csrftoken'
+import * as Constants from '../dependencies';
 
 const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
   const [symbol, setSymbol] = useState('');
@@ -21,7 +22,7 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
   const handleSubmit = e => {
     e.preventDefault();
 
-    fetch('http://127.0.0.1:8000/api/fin_instrument/?symbol='+symbol, {
+    fetch(Constants.SERVER_API+'fin_instrument/?symbol='+symbol, {
         method: 'GET',
         headers: {
         'Content-Type': 'application/json'
@@ -39,7 +40,7 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
              */
             let apikey = fin_advisor.apikey.key
             console.log(apikey)
-            let req_url = 'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords='+symbol+'&apikey='+apikey
+            let req_url = Constants.DATA_SOURCE_QUERY+'function=SYMBOL_SEARCH&keywords='+symbol+'&apikey='+apikey
 
             //fetch to get data
             fetch(req_url, {
@@ -74,7 +75,7 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
             //lead already has such tool -> we need to update quantity
             if (instrument_to_upd != null){
                 instrument_to_upd.quantity = quantity
-                fetch('http://127.0.0.1:8000/api/portfolio/'+instrument_to_upd.id, {
+                fetch(Constants.SERVER_API+'portfolio/'+instrument_to_upd.id, {
                     method: 'PUT',
                     headers: {
                     'Content-Type': 'application/json'
@@ -98,7 +99,7 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
 
 
                 //create new portfolio row
-                let portfolio_create_req_url = 'http://127.0.0.1:8000/api/portfolio/'
+                let portfolio_create_req_url = Constants.SERVER_API+'portfolio/'
                 fetch(portfolio_create_req_url, {
                     method: 'POST',
                     headers: {
@@ -140,7 +141,7 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
     instrument['currency'] = instrument_info['8. currency']
 
     //create instrument
-    let instrument_req_url = 'http://127.0.0.1:8000/api/fin_instrument/'
+    let instrument_req_url = Constants.SERVER_API+'fin_instrument/'
     fetch(instrument_req_url, {
         method: 'POST',
         headers: {
@@ -157,7 +158,7 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
         portfolio['instrument'] = instrument_data.id //dinstrument_data.id - fin_instrument id
         portfolio['quantity'] = quantity
 
-        let portfolio_req_url = 'http://127.0.0.1:8000/api/portfolio/'
+        let portfolio_req_url = Constants.SERVER_API+'portfolio/'
 
         fetch(portfolio_req_url, {
             method: 'POST',

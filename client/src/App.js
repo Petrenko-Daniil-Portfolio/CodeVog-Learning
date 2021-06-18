@@ -12,28 +12,29 @@ import NotFound from './views/app/NotFound';
 
 function App () {
     return (
-        <div className="container-fluid">
+        <div data-testid='app-wrapper' className="container-fluid">
             <div className="row min-vh-100 flex-column flex-md-row">
 
                 <Router>
+
                     <Navbar / >
+                        <main className='col px-0 flex-grow-1 overflow-scroll' >
+                            <div className='container py-3'>
 
-                    <main className='col px-0 flex-grow-1 overflow-scroll' >
-                        <div className='container py-3'>
+                                <Switch>
+                                    <Route exact path='/login' component={Login} />
+                                    <Route exact path='/logout' component={Logout} />
+                                    <Route exact path='/dashboard' component={Dashboard} />
 
-                            <Switch>
-                                <Route exact path='/login' component={Login} />
-                                <Route exact path='/logout' component={Logout} />
-                                <Route exact path='/dashboard' component={Dashboard} />
+                                    <Route exact path='/fin_instruments/:id' component={FinInstruments} />
+                                    <Route exact path='/time_series/:id' component={TimeSeries} />
 
-                                <Route exact path='/fin_instruments/:id' component={FinInstruments} />
-                                <Route exact path='/time_series/:id' component={TimeSeries} />
+                                    <Route path="*" component={NotFound} />
+                                </Switch>
 
-                                <Route path="*" component={NotFound} />
-                            </Switch>
+                            </div>
+                        </main>
 
-                        </div>
-                    </main>
                 </Router>
 
             </div>

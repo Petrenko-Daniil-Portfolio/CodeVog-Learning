@@ -20,5 +20,6 @@ class InstrumentAdmin(admin.ModelAdmin):
 @admin.register(Portfolio)
 class PortfolioAdmin(admin.ModelAdmin):
     list_display = ('instrument', 'quantity')
+    list_display_links = None
 
 
