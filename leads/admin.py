@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from leads.models import Lead
+from leads.models import Lead, Instrument, Portfolio
 
 # Register your models here.
 
@@ -11,5 +11,15 @@ class LeadAdmin(admin.ModelAdmin):
         context['adminform'].form.fields['fin_advisor'].queryset = Lead.objects.filter(is_staff=True)
         return super(LeadAdmin, self).render_change_form(request, context, *args, **kwargs)
 
+
+@admin.register(Instrument)
+class InstrumentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'symbol', 'currency')
+
+
+@admin.register(Portfolio)
+class PortfolioAdmin(admin.ModelAdmin):
+    list_display = ('instrument', 'quantity')
+    list_display_links = None
 
 

@@ -1,59 +1,27 @@
 import React, { Component } from "react";
 import { render } from "react-dom";
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      data: [],
-      loaded: false,
-      placeholder: "Loading"
-    };
-  }
+import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
+import Navbar from './Navbar';
+import Login from './LoginPage';
+import Logout from './LogoutPage';
+import Dashboard from './Dashboard';
 
-  componentDidMount() {
-    fetch("api/lead")
-      .then(response => {
-        if (response.status > 400) {
-          return this.setState(() => {
-            return { placeholder: "Something went wrong!" };
-          });
-        }
-        return response.json();
-      })
-      .then(data => {
-        this.setState(() => {
-          return {
-            data,
-            loaded: true
-          };
-        });
-      });
-  }
-
-  render() {
+function App () {
     return (
-      <table>
-        <tbody>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-            </tr>
-            {this.state.data.map(contact => {
-              return (
-                <tr key={contact.id}>
-                    <td style={{"margin": "1px", "padding": "5px"}}>{contact.name}</td>
-                    <td style={{"color": "blue","margin": "1px", "padding": "5px"}}>{contact.email}</td>
-                </tr>
-              );
-            })}
-        </tbody>
-      </table>
+        <div>
+            <Router>
+                <Navbar / >
+
+                <Switch>
+                    <Route path='/login' component={Login} exact />
+                    <Route path='/logout' component={Logout} exact />
+                    <Route path='/dashboard' component={Dashboard} exact />
+                </Switch>
+
+            </Router>
+        </div>
     );
-  }
 }
 
 export default App;
-
-const container = document.getElementById("app");
-render(<App />, container);

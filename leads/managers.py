@@ -10,8 +10,9 @@ class LeadManager(BaseUserManager):
             raise ValueError(_('The Email must be set'))
 
         email = self.normalize_email(email)
-        lead = self.model(email=email, **extra_fields)
-        lead.set_password(password)
+        lead = self.model(email=email, password=password, **extra_fields)
+        # lead.set_password(password)
+
         lead.save(using=self._db)
         return lead
 
