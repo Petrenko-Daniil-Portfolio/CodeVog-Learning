@@ -5,26 +5,14 @@ from leads.models import Lead, Portfolio, Instrument
 class TestModels(TestCase):
 
     # Test Lead
-    def setUpUser(self):
-        lead = Lead.objects.create(
+    def setUp(self):
+        self.lead = Lead.objects.create(
             username='User For Django Tests',
             email='django_test_user@gmail.com',
             password='1111',
         )
-        return lead
 
-    def test_user_password_hashed(self):
-        lead = self.setUpUser()
-
-        self.assertNotEqual(lead.password, '1111')
-
-    def test_user_to_str(self):
-        lead = self.setUpUser()
-        self.assertEqual(lead.__str__(), lead.email)
-
-    # Test Portfolio
-    def setUpInstrument(self):
-        instrument = Instrument.objects.create(
+        self.instrument = Instrument.objects.create(
             name='Tencent Holdings Ltd',
             symbol='TCTZF',
             apikey='https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=TCTZF&apikey=IGH18KMBJWZT5PXK',
@@ -32,8 +20,15 @@ class TestModels(TestCase):
             region='United States',
             currency='USD'
         )
-        return instrument
 
+
+    def test_user_password_hashed(self):
+
+        self.assertNotEqual(self.lead.password, '1111')
+
+    def test_user_to_str(self):
+        self.assertEqual(self.lead.__str__(), self.lead.email)
+
+    # Test Portfolio
     def test_instrument_to_str(self):
-        instrument = self.setUpInstrument()
-        self.assertEqual(instrument.__str__(), instrument.name)
+        self.assertEqual(self.instrument.__str__(), self.instrument.name)
