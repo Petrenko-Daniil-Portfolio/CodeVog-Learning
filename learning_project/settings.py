@@ -38,6 +38,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 # Application definition
 
 INSTALLED_APPS = [
+    # django staff
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,9 +46,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # native apps
     'leads.apps.LeadsConfig',
-    #'frontend',
 
+    # 3-d party
+    'coverage',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',  # did not work for some reason

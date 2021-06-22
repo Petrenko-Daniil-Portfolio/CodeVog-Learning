@@ -133,6 +133,8 @@ const FinInstruments = (props) => {
             new_finInstruments.push(instrument_to_update)
 
             setFinInstruments(new_finInstruments)
+            setPortfolio(new_portfolio)
+            console.log(new_portfolio)
 
         }else{
             alert('You made a mistake while passing parameters to update the Instrument')
