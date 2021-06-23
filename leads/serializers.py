@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Lead, Portfolio, Instrument
+from .models import Lead, Portfolio, Instrument, TimeSeriesData
 
 from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed
@@ -40,6 +40,10 @@ class PortfolioSerializer(serializers.ModelSerializer):
         return instance
 
 
+class TimeSeriesDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TimeSeriesData
+        fields = '__all__'
 
 
 # class LoginSerializer(serializers.ModelSerializer):

@@ -6,6 +6,8 @@ from .managers import LeadManager
 
 from django.contrib.auth.hashers import make_password
 
+from model_utils.models import TimeStampedModel
+
 from django.core.validators import MinValueValidator
 
 # Create your models here.
@@ -53,7 +55,11 @@ class Instrument(models.Model):
     currency = models.CharField(max_length=3, null=True)
 
     def __str__(self):
-        return self.name
+        return self.symbol
 
 
+class TimeSeriesData(TimeStampedModel):
+    date = models.DateField('Date')
+    close_price = models.DecimalField(null=True, decimal_places=5, max_digits=12)
+    instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
 
