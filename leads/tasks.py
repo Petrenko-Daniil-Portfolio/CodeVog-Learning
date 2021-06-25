@@ -1,45 +1,51 @@
-from learning_project.celery import app
-from rest_framework.response import Response
+import json
+
+import requests
 from rest_framework import status
 
-import json
-import requests
+from learning_project.celery import app
+from .models import Instrument, TimeSeriesData
+from .data_source import DataSource
 
-from .models import Lead, Portfolio, Instrument, TimeSeriesData
-from .serializers import LeadSerializer, PortfolioSerializer, InstrumentSerializer, TimeSeriesDataSerializer
+from errors import RequestLimitError
 
 
 @app.task(bind=True)
 def create_time_series(self, instrument_symbol, fin_advisor_apikey):
-    # 1) send request to data sourse
+
+    instrument = Instrument.objects.get(symbol=instrument_symbol)
+
+    time_series_of_instrument = TimeSeriesData.objects.filter(instrument=instrument)
+    time_series_of_instrument.delete()
+
+    # 1) send request to data source
     response = requests.get(
-        'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=' + instrument_symbol + '&apikey=' + fin_advisor_apikey)
+        DataSource.TIME_SERIES_DAIL_QUERY + instrument_symbol + '&apikey=' + fin_advisor_apikey)
 
     # 2) call celery task
     response = json.loads(response.content)
     raw_time_series = response['Time Series (Daily)']
 
-    if 'Time Series (Daily)' in response:
-        instrument = Instrument.objects.get(symbol=instrument_symbol)
+    if 'Time Series (Daily)' not in response:
+        raise RequestLimitError(time_to_wait='60 seconds')
 
-        counter = 0
-        for date in raw_time_series:
-            close = raw_time_series[date]['4. close']
-            time_series = TimeSeriesData(date=date, close_price=close, instrument=instrument)
-            time_series.save()
-            counter += 1
+    instrument = Instrument.objects.get(symbol=instrument_symbol)
 
-            if counter >= 30:
-                break
-    else:
-        print("---ERROR---")
-        print(response)
+    counter = 0
+    for date in raw_time_series:
+        close = raw_time_series[date]['4. close']
+        time_series = TimeSeriesData(date=date, close_price=close, instrument=instrument)
+        time_series.save()
+        counter += 1
+
+        if counter >= 30:
+            break
 
 
 @app.task(bind=True)
 def update_single_time_series(self, instrument_id, instrument_symbol, instrument_apikey):
-    #send request to get time series
-    request = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=' + instrument_symbol + '&apikey=' + instrument_apikey
+    # send request to get time series
+    request = DataSource.TIME_SERIES_DAIL_QUERY + instrument_symbol + '&apikey=' + instrument_apikey
     response = requests.get(request)
     response = json.loads(response.content)
 
@@ -49,6 +55,7 @@ def update_single_time_series(self, instrument_id, instrument_symbol, instrument
         new_time_series = response['Time Series (Daily)']
         # new_time_series = raw_time_series.items()
 
+        print(new_time_series.keys())
         date = next(iter(new_time_series.keys()))  # get first key
         print(date)
         print(new_time_series[date])
@@ -70,7 +77,6 @@ def update_single_time_series(self, instrument_id, instrument_symbol, instrument
     else:
         print(response)
 
-    pass
 
 @app.task
 def update_all_time_series():

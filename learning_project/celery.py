@@ -8,7 +8,6 @@ app = Celery('learning_project')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
-
 app.conf.beat_schedule = {
     'update_all_time_series': {
         'task': 'leads.tasks.update_all_time_series',

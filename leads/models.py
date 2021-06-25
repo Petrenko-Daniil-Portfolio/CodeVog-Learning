@@ -22,8 +22,6 @@ class Lead(AbstractUser):
 
     created_at = models.DateTimeField(auto_now=True)
 
-    #portfolio = models.ForeignKey('Portfolio', on_delete=models.CASCADE, null=True, blank=True)  # change to false later
-
     USERNAME_FIELD = 'email'
 
     REQUIRED_FIELDS = []
@@ -44,15 +42,19 @@ class Portfolio(models.Model):
     instrument = models.ForeignKey('Instrument', on_delete=models.DO_NOTHING, null=True)  # change to false later
     quantity = models.IntegerField(validators=[MinValueValidator(0.0)])
 
+    objects = models.Manager
+
 
 class Instrument(models.Model):
     name = models.CharField(max_length=50)
     symbol = models.CharField(max_length=20, unique=True)
-    apikey = models.CharField(max_length=100) #change apikey so it is admin`s apikey
+    apikey = models.CharField(max_length=100)  # change apikey so it is admin`s apikey
 
     type = models.CharField(max_length=50, null=True)
     region = models.CharField(max_length=50, null=True)
     currency = models.CharField(max_length=3, null=True)
+
+    objects = models.Manager
 
     def __str__(self):
         return self.symbol
@@ -63,3 +65,4 @@ class TimeSeriesData(TimeStampedModel):
     close_price = models.DecimalField(null=True, decimal_places=5, max_digits=12)
     instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
 
+    objects = models.Manager

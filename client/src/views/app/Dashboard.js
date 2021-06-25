@@ -67,6 +67,10 @@ const Dashboard = () => {
             setMessage('There is no instrument with symbol "'+symbol+'" please be more accurate')
             setMessageType('warning')
         }
+        else{
+            setMessage('Instruments were successfully displayed')
+            setMessageType('success')
+        }
     })
 
     setSymbol('')
@@ -85,6 +89,18 @@ const Dashboard = () => {
         if (data.success == true){
             setMessage('All Time Series were successfully updated')
             setMessageType('success')
+
+            if (finInstruments.length > 0){
+                let newFinInstruments = [...finInstruments]
+
+                for (let i in newFinInstruments){
+                    newFinInstruments[i].status = 'updated'
+                }
+
+                setFinInstruments(newFinInstruments)
+                console.log(finInstruments)
+            }
+
         }else{
             setMessage('Error occurred while updating All Time Series')
             setMessageType('danger')
@@ -93,9 +109,43 @@ const Dashboard = () => {
   }
 
   const updateSingleTimeSeries = (instrument) => {
-        console.log(instrument)
+        let data = {
+            'instrument_id': instrument.id,
+            'instrument_symbol': instrument.symbol,
+            'instrument_apikey': instrument.apikey
+        }
+
+        fetch(Constants.SERVER_API + 'time_series/', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log(data)
+        })
   }
 
+  const updateAllTimeSeriesOfInstrument = (instrument) => {
+        let data = {
+            'instrument_symbol': instrument.symbol,
+            'instrument_apikey': instrument.apikey
+        }
+
+        fetch(Constants.SERVER_API + 'time_series/', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log(data)
+        })
+  }
 
   return (
 
@@ -168,7 +218,7 @@ const Dashboard = () => {
                                     <td>{instrument.name}</td>
                                     <td>
                                         <button onClick={ () => updateSingleTimeSeries(instrument)} type="button" className="btn btn-outline-primary ms-2">Update Last Day</button>
-                                        <button onClick={ () => updateSingleTimeSeries()} type="button" className="btn btn-secondary ms-2">Update All</button>
+                                        <button onClick={ () => updateAllTimeSeriesOfInstrument(instrument)} type="button" className="btn btn-secondary ms-2">Update All</button>
                                     </td>
                                     <td>{instrument.status}</td>
                                 </tr>
