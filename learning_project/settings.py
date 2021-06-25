@@ -156,6 +156,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, '/frontend/static')
 ]
 
+MEDIA_URL = '/media/'  # it just must look like this
+MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'daniil_project/leads')  # dir where upload_to will be located
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 

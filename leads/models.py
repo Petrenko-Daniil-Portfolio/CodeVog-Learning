@@ -17,6 +17,8 @@ class Lead(AbstractUser):
     username = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
 
+    image = models.ImageField(upload_to='images', null=True)
+
     apikey = models.JSONField(blank=True, null=True)
     fin_advisor = models.ForeignKey('self', null=True, on_delete=models.CASCADE)
 

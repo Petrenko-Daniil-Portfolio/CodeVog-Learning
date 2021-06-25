@@ -10,7 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from .tasks import create_time_series, update_all_time_series, update_single_time_series
 
-from errors import RequestLimitError
+from .errors import RequestLimitError
 
 
 class GetAllLeads(generics.ListCreateAPIView):

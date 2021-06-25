@@ -11,6 +11,8 @@ const FinInstruments = (props) => {
 
     const [loading, setLoading] = useState(true);
 
+    const [avatar, setAvatar] = useState('')
+
     useEffect(  () => {
         if (localStorage.getItem('token') === null) {
           window.location.replace(Constants.SITE_URL+'login');
@@ -51,6 +53,8 @@ const FinInstruments = (props) => {
                 .then(res => res.json())
                 .then(data => {
                     setLead(data)
+                    console.log("AVATAR:")
+                    console.log(data)
 
                     //If user that entered page is not owner or staff -> redirect
                     if (user.id != lead.id && user.is_staff == false){
@@ -182,7 +186,9 @@ const FinInstruments = (props) => {
 
     return (
         <div>
-
+            <div className='d-flex'>
+            <img style={{width: '200px', height: '200px'}} src={lead.image} className="rounded float-left" />
+            </div>
         <h2> FinInstruments of <span style={{color: "#107896"}}><b> {lead.username} </b></span></h2>
         <br />
 

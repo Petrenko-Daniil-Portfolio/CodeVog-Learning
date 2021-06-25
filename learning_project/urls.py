@@ -15,25 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
-from django.views.generic import TemplateView
-
-# frontend_modules = {
-#     'app': {
-#         'url': '',
-#         'view': 'index.html',
-#     }
-# }
-#
-# frontend_urls = []
-# for module_name, module_data in frontend_modules.items():
-#     frontend_urls.append(re_path(
-#         module_data['url'],
-#         TemplateView.as_view(template_name=module_data['view']),
-#         name=module_name))
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('', include('leads.urls')),
-    # path('', include('frontend.urls')),
-]
+
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

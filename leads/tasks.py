@@ -7,7 +7,7 @@ from learning_project.celery import app
 from .models import Instrument, TimeSeriesData
 from .data_source import DataSource
 
-from errors import RequestLimitError
+from .errors import RequestLimitError
 
 
 @app.task(bind=True)
