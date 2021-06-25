@@ -199,7 +199,6 @@ const TimeSeries = (props) =>{
 
                     }
 
-
                 </tbody>
 
             </table>

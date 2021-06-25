@@ -24,7 +24,7 @@ services:
     restart: always
     build:
       context: .
-    command: bash -c "celery -A learning_project worker -l info && celery -A learning_project beat -l info"
+    command: bash -c "celery -A learning_project worker -l info"
     volumes:
       - .:/daniil_project
     environment:

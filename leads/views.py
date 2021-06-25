@@ -6,6 +6,7 @@ from .serializers import LeadSerializer, PortfolioSerializer, InstrumentSerializ
 from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 
 from django.http import HttpResponse, HttpRequest
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,7 +14,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 import requests
 from rest_framework.mixins import CreateModelMixin
 
-from .tasks import create_time_series
+from .tasks import create_time_series, update_all_time_series
 
 from django.shortcuts import get_object_or_404
 import django_filters
@@ -75,14 +76,21 @@ def portfolio_rows_of_lead(request, lead_id):
 
 # celery related
 
-@api_view(['POST'])
+@api_view(['POST', 'PUT'])
 def time_series(request):
 
-    if request.method == 'POST':
-        # 1) get data from POST
-        symbol = request.data['symbol']
-        apikey = request.data['apikey']
+    try:
+        if request.method == 'POST':
+            # get data from POST
+            symbol = request.data['symbol']
+            apikey = request.data['apikey']
 
-        create_time_series.apply_async((symbol, apikey), countdown=30)
+            create_time_series.apply_async((symbol, apikey), countdown=30)
 
-    return HttpResponse("it works")
+        if request.method == 'PUT':
+            update_all_time_series()
+
+        return Response(data={'success': True}, status=status.HTTP_200_OK)
+
+    except:
+        return Response(data={'success': False}, status=status.HTTP_400_BAD_REQUEST)

@@ -48,7 +48,7 @@ class Portfolio(models.Model):
 class Instrument(models.Model):
     name = models.CharField(max_length=50)
     symbol = models.CharField(max_length=20, unique=True)
-    apikey = models.CharField(max_length=100, unique=True)
+    apikey = models.CharField(max_length=100) #change apikey so it is admin`s apikey
 
     type = models.CharField(max_length=50, null=True)
     region = models.CharField(max_length=50, null=True)

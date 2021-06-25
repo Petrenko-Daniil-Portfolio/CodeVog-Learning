@@ -207,14 +207,14 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
             */
 
             let instrument = {}
-            let apikey = Constants.DATA_SOURCE_QUERY+'function=SYMBOL_SEARCH&keywords='+instrument_info['1. symbol']+'&apikey='+fin_advisor.apikey.key
-            setApiKey(apikey)
+            //let apikey = Constants.DATA_SOURCE_QUERY+'function=SYMBOL_SEARCH&keywords='+instrument_info['1. symbol']+'&apikey='+fin_advisor.apikey.key
+            setApiKey(fin_advisor.apikey.key)
 
             instrument['symbol'] = instrument_info['1. symbol']
             instrument['name'] = instrument_info['2. name']
             instrument['type'] = instrument_info['3. type']
             instrument['region'] = instrument_info['4. region']
-            instrument['apikey'] = apikey
+            instrument['apikey'] = fin_advisor.apikey.key
             instrument['currency'] = instrument_info['8. currency']
 
             //create instrument

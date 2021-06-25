@@ -14,7 +14,7 @@ urlpatterns = [
 
     path('api/time_series_data/', views.TimeSeriesDataView.as_view()),  # time series data
 
-    path('api/time_series/', views.time_series),  # timeseries
+    path('api/time_series/', views.time_series),  # create time series 4 one instrument
 
     path('api/lead/auth/', include('rest_auth.urls')),
     path('api/lead/auth/register/', include('rest_auth.registration.urls'))
