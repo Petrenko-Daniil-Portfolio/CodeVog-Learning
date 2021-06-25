@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from leads.models import Lead, Instrument, Portfolio
+from leads.models import Lead, Instrument, Portfolio, TimeSeriesData
 
 # Register your models here.
 
@@ -21,5 +21,11 @@ class InstrumentAdmin(admin.ModelAdmin):
 class PortfolioAdmin(admin.ModelAdmin):
     list_display = ('instrument', 'quantity')
     list_display_links = None
+
+
+@admin.register(TimeSeriesData)
+class TimeSeriesDataAdmin(admin.ModelAdmin):
+    list_display = ('date', 'close_price', 'instrument')
+    list_display = ('instrument', 'close_price', 'date')
 
 

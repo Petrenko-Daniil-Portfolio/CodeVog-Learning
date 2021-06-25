@@ -102,9 +102,9 @@ const TimeSeries = (props) =>{
                             //for each fin inst make query and then insert in propper table
 
                             for (let i=0; i<new_finInstruments.length; i++){
-
-                                let req_url = Constants.DATA_SOURCE_QUERY+'function=TIME_SERIES_DAILY&symbol='+new_finInstruments[i].symbol+'&apikey='+fin_advisor.apikey.key
-
+                                let instrument =  new_finInstruments[i]['id']
+                                let req_url = Constants.SERVER_API+'time_series_data/?instrument='+ instrument
+                                console.log(new_finInstruments[i]['symbol'])
                                 await fetch(req_url, {
                                     method: 'GET',
                                     headers: {
@@ -116,18 +116,24 @@ const TimeSeries = (props) =>{
                                     if(time_series['Note'] && error===''){
                                         setError(time_series['Note'])
                                     }
+                                    //sort time series so the latest was the first one
+                                    time_series.sort((a, b) => new Date(b.date) - new Date(a.date))
+                                    console.log(time_series)
 
                                     let col_counter = i + 1
                                     let row_counter = 0
-                                    for( let key in time_series['Time Series (Daily)'] ){
+
+                                    for( let key in time_series ){
                                         let td = document.getElementById(""+row_counter+""+col_counter)
+                                        console.log(time_series[key])
+                                        console.log("++++++++++")
                                         if (col_counter===1) {
 
                                             let date_td = document.getElementById(""+row_counter+"0")
-                                            date_td.innerHTML = "<b>"+key+"</b>"
-                                            td.innerHTML = time_series['Time Series (Daily)'][key]['4. close']
+                                            date_td.innerHTML = "<b>"+time_series[key]['date']+"</b>"
+                                            td.innerHTML = time_series[key]['close_price']
                                         }else{
-                                            td.innerHTML = time_series['Time Series (Daily)'][key]['4. close']
+                                            td.innerHTML = time_series[key]['close_price']
                                         }
 
                                         row_counter++
@@ -135,8 +141,6 @@ const TimeSeries = (props) =>{
                                         if (row_counter >= 31){
                                             break;
                                         }
-
-
                                     }
 
                                 })
@@ -194,7 +198,6 @@ const TimeSeries = (props) =>{
                         <tr className='alert alert-info'><td colSpan={finInstruments.length+1}> Loading </td></tr>
 
                     }
-
 
                 </tbody>
 

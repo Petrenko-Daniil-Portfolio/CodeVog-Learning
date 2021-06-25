@@ -126,9 +126,7 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
   };
 
   const addInstrument = (instrument_info) => {
-
-
-    //check if user did not chose option that is already in DB
+    //check if user did not chose option that is already in DB/ check if instrument is not in db
     fetch(Constants.SERVER_API+'fin_instrument/?symbol='+instrument_info['1. symbol'], {
         method: 'GET',
         headers: {
@@ -209,12 +207,14 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
             */
 
             let instrument = {}
+            //let apikey = Constants.DATA_SOURCE_QUERY+'function=SYMBOL_SEARCH&keywords='+instrument_info['1. symbol']+'&apikey='+fin_advisor.apikey.key
+            setApiKey(fin_advisor.apikey.key)
 
             instrument['symbol'] = instrument_info['1. symbol']
             instrument['name'] = instrument_info['2. name']
             instrument['type'] = instrument_info['3. type']
             instrument['region'] = instrument_info['4. region']
-            instrument['apikey'] = apiKey
+            instrument['apikey'] = fin_advisor.apikey.key
             instrument['currency'] = instrument_info['8. currency']
 
             //create instrument
@@ -228,6 +228,28 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
             })
             .then(instrument_res => instrument_res.json())
             .then( instrument_data => {
+
+                //create time series for this tool
+                /*
+                    1) Send req to data sourse
+                    2) Send response to my view
+                */
+
+
+                let symbol_apikey = {
+                    'symbol': instrument['symbol'],
+                    'apikey': fin_advisor.apikey.key
+                }
+                //send time_series to view function via fetch
+                fetch(Constants.SERVER_API+'time_series/', {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(symbol_apikey)
+                })
+
+
 
                 //add instrument to portfolio
                 let portfolio = {}
@@ -246,6 +268,9 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
                 })
                 .then( portfolio_res => portfolio_res.json())
                 .then(portfolio_data => {
+
+                    console.log(instrument_data)
+                    console.log(portfolio_data)
 
                     updInstrument(instrument_data, 'create', portfolio_data)
 
@@ -278,8 +303,8 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
         <table className="table table-striped">
             <thead>
                 <tr>
-                    <th scope="col">Name</th>
                     <th scope="col">Symbol</th>
+                    <th scope="col">Name</th>
                     <th scope="col">Type</th>
                     <th scope="col">Region</th>
                     <th scope="col">Actions</th>
