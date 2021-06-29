@@ -2,6 +2,8 @@ import React, { useState, useEffect, Fragment } from 'react';
 import AddInstrument from './AddInstrument';
 import * as Constants from '../dependencies';
 
+import BasicLineChart from '../../components/charts/BasicLineChart';
+
 const FinInstruments = (props) => {
     const [user, setUser] = useState('');
     const [lead, setLead] = useState('');
@@ -53,8 +55,6 @@ const FinInstruments = (props) => {
                 .then(res => res.json())
                 .then(data => {
                     setLead(data)
-                    console.log("AVATAR:")
-                    console.log(data)
 
                     //If user that entered page is not owner or staff -> redirect
                     if (user.id != lead.id && user.is_staff == false){
@@ -183,7 +183,6 @@ const FinInstruments = (props) => {
 
     }
 
-
     return (
         <div>
             <div className='d-flex'>
@@ -235,7 +234,14 @@ const FinInstruments = (props) => {
                 })}
             </tbody>
         </table>
+        <br/>
 
+        {finInstruments && finInstruments.length &&
+
+
+            <BasicLineChart  finInstruments={finInstruments}  />
+
+        }
         </div>
     );
 

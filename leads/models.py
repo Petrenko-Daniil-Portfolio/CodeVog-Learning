@@ -33,6 +33,7 @@ class Lead(AbstractUser):
     def save(self, *args, **kwargs):
         if self.apikey is None:
             self.password = make_password(self.password)
+            self.apikey = {'apikey': 'None'}
         super(Lead, self).save(*args, **kwargs)
 
     def __str__(self):
