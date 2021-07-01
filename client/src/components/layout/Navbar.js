@@ -59,6 +59,9 @@ const Navbar = () => {
                                 <li>
                                     <Link to={'/fin_instruments/'+user.id} className="nav-link">Financial Instruments</Link>
                                 </li>
+                                <li>
+                                    <Link to={'/portfolio_value/'+user.id} className="nav-link">Portfolio Value</Link>
+                                </li>
                             </Fragment>
                             )
                         }

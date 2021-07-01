@@ -3,7 +3,7 @@ import { render } from "react-dom";
 import DjangoCSRFToken from 'django-react-csrftoken'
 import * as Constants from '../dependencies';
 
-const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
+const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_advisor, portfolio}) => {
   const [symbol, setSymbol] = useState('');
   const [quantity, setQuantity] = useState('');
 
@@ -15,6 +15,8 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
   const [apiKey, setApiKey] = useState('');
   const [newInstrument, setNewInstrument] = useState({})
 
+  const [clearOptions, setClearOptions] = useState(true)
+
   useEffect( () => {
     //
   }, [])
@@ -23,106 +25,115 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
   const handleSubmit = e => {
     e.preventDefault();
 
-    fetch(Constants.SERVER_API+'fin_instrument/?symbol='+symbol, {
-        method: 'GET',
-        headers: {
-        'Content-Type': 'application/json'
-        },
-    })
-    .then(res => res.json())
-    .then( async (data) => {
-        //data is instrument we seatched
-        //id data == 0 we have no such instrument in our db
-        console.log(data)
-        if(data.length == 0){
-            /*
-                1) make request to site
-                2) check result
-                3) create new instrument
-             */
-            let apikey = fin_advisor.apikey.key
+//    if (clearOptions){
 
-            let req_url = Constants.DATA_SOURCE_QUERY+'function=SYMBOL_SEARCH&keywords='+symbol+'&apikey='+apikey
+        fetch(Constants.SERVER_API+'fin_instrument/?symbol='+symbol, {
+            method: 'GET',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+        })
+        .then(res => res.json())
+        .then( async (data) => {
+            //data is instrument we seatched
+            //id data == 0 we have no such instrument in our db
+            console.log(data)
+            if(data.length == 0){
+                /*
+                    1) make request to site
+                    2) check result
+                    3) create new instrument
+                 */
+                let apikey = fin_advisor.apikey.key
 
-            //fetch to get data
-            fetch(req_url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-            })
-            .then(res => res.json())
-            .then( data => {
-                setOptions(data.bestMatches)
-                setApiKey(req_url)
-            })
+                let req_url = Constants.DATA_SOURCE_QUERY+'function=SYMBOL_SEARCH&keywords='+symbol+'&apikey='+apikey
 
-        }else{
-            /*
-                1) check if lead already has this instrument
-                2) update if does
-                3) add if does not
-            */
-            var instrument_to_upd = null
-            for (var row in portfolio){
-
-                if (portfolio[row].instrument === data[0].id){
-                    instrument_to_upd = portfolio[row]
-                }
-            }
-
-            //lead already has such tool -> we need to update quantity
-            if (instrument_to_upd != null){
-                instrument_to_upd.quantity = quantity
-                fetch(Constants.SERVER_API+'portfolio/'+instrument_to_upd.id, {
-                    method: 'PUT',
-                    headers: {
-                    'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(instrument_to_upd)
-                })
-                .then(res => res.json())
-                .then(response_data => {
-                    console.log(response_data)
-                    updInstrument(response_data, 'update')
-                })
-            }
-            else{
-                //we have such instrument in db but we need to ADD it to this list
-                // create new portfolio raw with this fin tool and quantity
-
-                let new_portfolio = {}
-                new_portfolio['user'] = leadId
-                new_portfolio['instrument'] = data[0].id //data[0] is our  instrument
-                new_portfolio['quantity'] = quantity
-
-
-                //create new portfolio row
-                let portfolio_create_req_url = Constants.SERVER_API+'portfolio/'
-                fetch(portfolio_create_req_url, {
-                    method: 'POST',
+                //fetch to get data
+                fetch(req_url, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(new_portfolio)
                 })
-                .then( res => res.json() )
-                .then( response_data => {
-                    //response_data is my portfolio
-                    //data is instrument
-
-
-                    updInstrument(data[0], 'add', response_data)
-
+                .then(res => res.json())
+                .then( data => {
+                    setOptions(data.bestMatches)
+                    setApiKey(req_url)
                 })
 
+            }else{
+                /*
+                    1) check if lead already has this instrument
+                    2) update if does
+                    3) add if does not
+                */
+                var instrument_to_upd = null
+                for (var row in portfolio){
+
+                    if (portfolio[row].instrument === data[0].id){
+                        instrument_to_upd = portfolio[row]
+                    }
+                }
+
+                //lead already has such tool -> we need to update quantity
+                if (instrument_to_upd != null){
+                    instrument_to_upd.quantity = quantity
+                    fetch(Constants.SERVER_API+'portfolio/'+instrument_to_upd.id, {
+                        method: 'PUT',
+                        headers: {
+                        'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(instrument_to_upd)
+                    })
+                    .then(res => res.json())
+                    .then(response_data => {
+                        console.log(response_data)
+                        updInstrument(response_data, 'update')
+                    })
+                }
+                else{
+                    //we have such instrument in db but we need to ADD it to this list
+                    // create new portfolio raw with this fin tool and quantity
+
+                    let new_portfolio = {}
+                    new_portfolio['user'] = leadId
+                    new_portfolio['instrument'] = data[0].id //data[0] is our  instrument
+                    new_portfolio['quantity'] = quantity
+
+
+                    //create new portfolio row
+                    let portfolio_create_req_url = Constants.SERVER_API+'portfolio/'
+                    fetch(portfolio_create_req_url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(new_portfolio)
+                    })
+                    .then( res => res.json() )
+                    .then( response_data => {
+                        //response_data is my portfolio
+                        //data is instrument
+
+
+                        updInstrument(data[0], 'add', response_data)
+
+                    })
+
+
+                }
 
             }
 
-        }
 
+        })
+//    }else{
+//        setSymbol('')
+//        setQuantity('')
+//
+//    }
 
-    })
+//    setClearOptions(!clearOptions)
   };
 
   const addInstrument = (instrument_info) => {
@@ -248,7 +259,13 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
                     },
                     body: JSON.stringify(symbol_apikey)
                 })
+                .then( () => {
 
+
+                    setTimeout(function() { UpdateChartLinesMethod_ref.current() }, 35000)
+
+                })
+                //update BasicLineChart after new time_series are created
 
 
                 //add instrument to portfolio
@@ -280,20 +297,19 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
 
             })
         }
+
+        //update charts after 30 seconds
+
     })
     setOptions([])
     setSymbol('')
     setQuantity('')
   }
 
-
-
-
-
     return(
       <div>
         <form onSubmit={handleSubmit}> <DjangoCSRFToken/>
-                <input placeholder="Symbol" name='symbol' value={symbol} onChange={e => setSymbol(e.target.value)} />
+                <input placeholder="Symbol" name='symbol' value={symbol} onChange={e => setSymbol(e.target.value) } />
 
                 <input placeholder="Quantity" name='quantity' value={quantity} onChange={e => setQuantity(e.target.value)} className='ms-1'/>
 
@@ -312,13 +328,13 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
                 </tr>
             </thead>
 
+            {clearOptions == false &&
             <tbody>
 
-                 {console.log(options)}
+
                  {options.map( (option, index) => {
 
                     return(
-
                         <tr key={index} >
                             <td> {option['1. symbol']} </td>
                             <td> {option['2. name']} </td>
@@ -330,12 +346,11 @@ const AddInstrument = ({leadId, updInstrument, fin_advisor, portfolio}) => {
                             <td>
                                 <button onClick={ () => addInstrument(option)}  type="button" className="btn btn-outline-dark">Add</button>
                             </td>
-
-
                         </tr>
                     );
                 })}
             </tbody>
+            }
         </table>
       </div>
     )

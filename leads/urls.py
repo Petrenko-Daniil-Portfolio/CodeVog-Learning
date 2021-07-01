@@ -16,6 +16,8 @@ urlpatterns = [
 
     path('api/time_series/', views.time_series),  # create time series 4 one instrument
 
+    path('api/portfolio_value', views.portfolio_value), # get portfolio value data
+
     path('api/lead/auth/', include('rest_auth.urls')),
     path('api/lead/auth/register/', include('rest_auth.registration.urls'))
 ]

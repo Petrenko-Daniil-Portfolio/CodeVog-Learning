@@ -9,7 +9,7 @@ import DjangoCSRFToken from 'django-react-csrftoken'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
-const BasicLineChart = ( {finInstruments} ) => {
+const BasicLineChart = ( {UpdateChartLinesMethod_ref, finInstruments} ) => {
 
     const [symbol, setSymbol] = useState('')
 
@@ -23,7 +23,8 @@ const BasicLineChart = ( {finInstruments} ) => {
 
     useEffect( () => {
         buildAllChartLines()
-    }, [])
+        UpdateChartLinesMethod_ref.current = buildAllChartLines
+    }, [finInstruments])
 
     const buildChartLine = () => {
         if (symbol){
@@ -35,24 +36,59 @@ const BasicLineChart = ( {finInstruments} ) => {
                 }
             })
             .then( res => res.json() )
-            .then ( instrument_data => {
-                if (instrument_data.length === 0){
+            .then ( instruments_data => {
+                if (instruments_data.length === 0){
                     setMessageType('warning')
                     setMessage("There Is No  Symbol '"+symbol+"'! Please be more attentive.")
+                    setSymbol('')
                 }else{
+                    let instrument = instruments_data[0]
                     // get time series of this tool
                     // re render chart
                     // change message to success
+
+                    fetch(Constants.SERVER_API+'time_series_data/?instrument='+instrument.id, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'app/json'
+                        }
+                    })
+                    .then( res => res.json() )
+                    .then( time_series_data => {
+                        time_series_data.sort((a,b) => (a.date > b.date) ? 1 : ((b.date > a.date) ? -1 : 0)) // sort all time series from oldest to newest
+
+                         let series_dates_n_prices = [] // all dates of chart line with it`s close prices
+                         let series_name = instrument['symbol'] //name of chart line is fin tool symbol
+
+                         //add dates to list if there is no such date
+                         for (let i in time_series_data){
+                             series_dates_n_prices.push( [Date.UTC(...time_series_data[i]['date'].split('-')), parseFloat( time_series_data[i]['close_price'])  ])
+                         }
+
+                         let prev_state = {...options}
+                         prev_state.series = {name: series_name, data: series_dates_n_prices}
+                         setOptions(prev_state)
+
+                         setMessage(series_name+' Time Series Were Successfully Displayed')
+                         setMessageType('success')
+                         setSymbol('')
+                    })
                 }
             })
         }
         else{
             buildAllChartLines()
+            setMessage('All Time Series Were Successfully Displayed')
+            setMessageType('success')
         }
     }
 
     const buildAllChartLines = async () => {
-                let time_series_list = []  // list of dicts [ {name: '', data: []}, {name: '', data: []} ]
+
+        console.log("I was called")
+
+        let time_series_list = []  // list of dicts [ {name: '', data: []}, {name: '', data: []} ]
+        console.log('+-+')
 
         for (let index in finInstruments){
 
@@ -66,21 +102,19 @@ const BasicLineChart = ( {finInstruments} ) => {
             })
             .then(res => res.json())
             .then(time_series_data => {
-                time_series_data.sort((a,b) => (a.date > b.date) ? 1 : ((b.date > a.date) ? -1 : 0)) // sort all time series
+                time_series_data.sort((a,b) => (a.date > b.date) ? 1 : ((b.date > a.date) ? -1 : 0)) // sort all time series from oldest to newest
 
-
-
-                let series_dates = [] // all dates of chart line with it`s close prices
+                let series_dates_n_prices = [] // all dates of chart line with it`s close prices
                 let series_name = finInstruments[index]['symbol'] //name of chart line is fin tool symbol
 
                 //add dates to list if there is no such date
-                for (let j in time_series_data){
+                for (let i in time_series_data){
 
-                    series_dates.push( [Date.UTC(...time_series_data[j]['date'].split('-')), parseFloat( time_series_data[j]['close_price'])  ])
+                    series_dates_n_prices.push( [Date.UTC(...time_series_data[i]['date'].split('-')), parseFloat( time_series_data[i]['close_price'])  ])
 
                 }
 
-                time_series_list.push( {name: series_name, data: series_dates} )
+                time_series_list.push( {name: series_name, data: series_dates_n_prices} )
 
             })
 
@@ -121,6 +155,7 @@ const BasicLineChart = ( {finInstruments} ) => {
         return(
 
             <div>
+
                 <h2>Charts</h2>
 
                 <form className="text-start"> <DjangoCSRFToken/>

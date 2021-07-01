@@ -12,6 +12,13 @@ from .tasks import create_time_series, update_all_time_series, update_single_tim
 
 from .errors import RequestLimitError
 
+from django_pandas.io import read_frame
+
+import pandas as pd
+from datetime import datetime, timedelta
+
+from .data_source import DataSource
+
 
 class GetAllLeads(generics.ListCreateAPIView):
     queryset = Lead.objects.all()
@@ -96,7 +103,64 @@ def time_series(request):
 
         create_time_series.apply_async((symbol, apikey), countdown=30)
 
+    # return Response(data={'success': False}, status=status.HTTP_400_BAD_REQUEST)
     return Response(data={'success': True}, status=status.HTTP_200_OK)
 
-        # return Response(data={'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+def portfolio_value(request):
+
+    if request.method == "POST":
+
+        # get data form GET
+        lead = request.data['lead']
+
+        qs_portfolio = Portfolio.objects.filter(user=lead['id']).values('instrument', 'quantity')
+        df_portfolio = read_frame(qs_portfolio)
+
+        currencies = []
+        instruments = []
+
+        for row, column in df_portfolio.iterrows():
+
+            instrument = Instrument.objects.get(symbol=column['instrument'])
+            instruments.append(instrument)
+
+            instrument_currency = getattr(instrument, 'currency')
+            currencies.append(instrument_currency)
+
+        df_portfolio['currency'] = currencies
+
+        month = []  # last 30 days
+        for i in range(31, -1, -1):
+            month.append((datetime.now() - timedelta(i)).strftime('%Y-%m-%d'))
+
+        # create data frame with  indexes as days and instruments as columns
+        df_portfolio_prices = pd.DataFrame(index=month, columns=instruments)
+
+        # loop over instruments to get their time series
+        instrument_counter = 0
+        for instrument in instruments:
+            qs_time_series = TimeSeriesData.objects.filter(instrument=instrument.id).order_by('date').values('date', 'close_price')
+            df_time_series = read_frame(qs_time_series)
+
+            # loop over time series to set close prices to df_portfolio_prices
+            for i in df_time_series.index:
+
+                # loop over df_portfolio_prices to fill all empty cells with close_prices * quantity if dates are equal
+                for day in df_portfolio_prices.index:
+                    if str(df_time_series.date[i]) == str(day):
+                        df_portfolio_prices[instrument][day] = round(df_time_series.close_price[i] * df_portfolio.quantity[instrument_counter], 5)
+
+            instrument_counter += 1
+
+        # df_portfolio_prices = df_portfolio_prices.fillna(method='ffill', axis=0)
+        df_portfolio_prices = df_portfolio_prices.ffill(axis=0)
+
+        df_portfolio_prices['price'] = df_portfolio_prices[list(df_portfolio_prices.columns)].sum(axis=1)
+        print(df_portfolio_prices)
+
+
+        return Response(data={'success': True}, status=status.HTTP_200_OK)
+
+    return Response(data={'success': False}, status=status.HTTP_400_BAD_REQUEST)

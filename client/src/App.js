@@ -9,6 +9,7 @@ import Dashboard from './views/app/Dashboard';
 import FinInstruments from './views/app/FinInstruments';
 import TimeSeries from './views/app/TimeSeries.js';
 import NotFound from './views/app/NotFound';
+import PortfolioValue from './views/app/PortfolioValue'
 
 function App () {
     return (
@@ -28,6 +29,7 @@ function App () {
 
                                     <Route exact path='/fin_instruments/:id' component={FinInstruments} />
                                     <Route exact path='/time_series/:id' component={TimeSeries} />
+                                    <Route exact path='/portfolio_value/:id' component={PortfolioValue} />
 
                                     <Route path="*" component={NotFound} />
                                 </Switch>

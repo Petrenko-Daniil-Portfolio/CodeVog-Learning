@@ -1,10 +1,13 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, useRef, Fragment } from 'react';
 import AddInstrument from './AddInstrument';
 import * as Constants from '../dependencies';
 
 import BasicLineChart from '../../components/charts/BasicLineChart';
 
 const FinInstruments = (props) => {
+
+    const UpdateChartLinesMethod_ref = useRef(null)
+
     const [user, setUser] = useState('');
     const [lead, setLead] = useState('');
 
@@ -40,7 +43,6 @@ const FinInstruments = (props) => {
                 .then(res => res.json())
                 .then(data => {
                     setUser(data);
-
                 })
             })
             .then( () => {
@@ -112,7 +114,12 @@ const FinInstruments = (props) => {
             instrument_to_update['quantity'] = portfolio_to_update['quantity']
             new_finInstruments.push(instrument_to_update)
 
+            let new_portfolio = [...portfolio]
+            new_portfolio.push(portfolio_to_update)
+
+
             setFinInstruments(new_finInstruments)
+            setPortfolio(new_portfolio)
 
         }else if ( status==='update' ){
 
@@ -148,6 +155,9 @@ const FinInstruments = (props) => {
 
     const deleteInstrument = (fin_instrument_id) => {
         //we are not delete the instrument but portfolio row with such instrument
+        console.log("+--+")
+        console.log(fin_instrument_id)
+
         let portfolio_to_delete = null
         let new_portfolio = []
         let new_finInstruments = []
@@ -188,15 +198,19 @@ const FinInstruments = (props) => {
             <div className='d-flex'>
             <img style={{width: '200px', height: '200px'}} src={lead.image} className="rounded float-left" />
             </div>
-        <h2> FinInstruments of <span style={{color: "#107896"}}><b> {lead.username} </b></span></h2>
-        <br />
+
 
         {user.is_staff === true &&
-            <AddInstrument leadId={lead.id} updInstrument={updateInstrument}  fin_advisor={user} portfolio={portfolio}  />
+          <div>
+            <h2> Add Instrument</h2>
+            <br />
+            <AddInstrument UpdateChartLinesMethod_ref={UpdateChartLinesMethod_ref} leadId={lead.id} updInstrument={updateInstrument}  fin_advisor={user} portfolio={portfolio}  />
+          </div>
         }
-
         <br />
 
+        <h2> FinInstruments of <span style={{color: "#107896"}}><b> {lead.username} </b></span></h2>
+        <br />
         <table className="table table-striped">
 
             <thead>
@@ -236,11 +250,9 @@ const FinInstruments = (props) => {
         </table>
         <br/>
 
+
         {finInstruments && finInstruments.length &&
-
-
-            <BasicLineChart  finInstruments={finInstruments}  />
-
+            <BasicLineChart UpdateChartLinesMethod_ref={UpdateChartLinesMethod_ref}  finInstruments={finInstruments}  />
         }
         </div>
     );
