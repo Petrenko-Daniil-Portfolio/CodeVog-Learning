@@ -252,7 +252,7 @@ const FinInstruments = (props) => {
 
 
         {finInstruments && finInstruments.length &&
-            <BasicLineChart UpdateChartLinesMethod_ref={UpdateChartLinesMethod_ref}  finInstruments={finInstruments}  />
+            <BasicLineChart UpdateChartLinesMethod_ref={UpdateChartLinesMethod_ref}  finInstruments={finInstruments} lead={lead}  />
         }
         </div>
     );

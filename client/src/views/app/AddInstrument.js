@@ -37,7 +37,7 @@ const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_a
         .then( async (data) => {
             //data is instrument we seatched
             //id data == 0 we have no such instrument in our db
-            console.log(data)
+
             if(data.length == 0){
                 /*
                     1) make request to site
@@ -57,6 +57,7 @@ const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_a
                 })
                 .then(res => res.json())
                 .then( data => {
+
                     setOptions(data.bestMatches)
                     setApiKey(req_url)
                 })
@@ -328,29 +329,29 @@ const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_a
                 </tr>
             </thead>
 
-            {clearOptions == false &&
-            <tbody>
+
+                <tbody>
 
 
-                 {options.map( (option, index) => {
+                     {options.map( (option, index) => {
 
-                    return(
-                        <tr key={index} >
-                            <td> {option['1. symbol']} </td>
-                            <td> {option['2. name']} </td>
+                        return(
+                            <tr key={index} >
+                                <td> {option['1. symbol']} </td>
+                                <td> {option['2. name']} </td>
 
-                            <td> {option['3. type']} </td>
-                            <td> {option['4. region']} </td>
+                                <td> {option['3. type']} </td>
+                                <td> {option['4. region']} </td>
 
 
-                            <td>
-                                <button onClick={ () => addInstrument(option)}  type="button" className="btn btn-outline-dark">Add</button>
-                            </td>
-                        </tr>
-                    );
-                })}
-            </tbody>
-            }
+                                <td>
+                                    <button onClick={ () => addInstrument(option)}  type="button" className="btn btn-outline-dark">Add</button>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+
         </table>
       </div>
     )

@@ -1,3 +1,4 @@
+import numpy as np
 
 from .models import Lead, Portfolio, Instrument, TimeSeriesData
 from .serializers import LeadSerializer, PortfolioSerializer, InstrumentSerializer, TimeSeriesDataSerializer
@@ -13,6 +14,11 @@ from .tasks import create_time_series, update_all_time_series, update_single_tim
 from .errors import RequestLimitError
 
 from django_pandas.io import read_frame
+
+import json
+import requests
+
+from decimal import Decimal
 
 import pandas as pd
 from datetime import datetime, timedelta
@@ -111,7 +117,6 @@ def time_series(request):
 def portfolio_value(request):
 
     if request.method == "POST":
-
         # get data form GET
         lead = request.data['lead']
 
@@ -121,6 +126,8 @@ def portfolio_value(request):
         currencies = []
         instruments = []
 
+        currencies_time_series_fx = {}
+
         for row, column in df_portfolio.iterrows():
 
             instrument = Instrument.objects.get(symbol=column['instrument'])
@@ -128,6 +135,20 @@ def portfolio_value(request):
 
             instrument_currency = getattr(instrument, 'currency')
             currencies.append(instrument_currency)
+
+            if instrument.currency != 'EUR' and instrument.currency not in currencies_time_series_fx:
+                response = requests.get(DataSource.TIME_SERIES_FX_QUERY.format(instrument.currency, instrument.apikey))
+                response = json.loads(response.content)['Time Series FX (Daily)']  # !!!
+
+                days_counter = 0
+                day_price_dict = {}
+                for key in response:
+                    day_price_dict[key] = response[key]['4. close']
+
+                    days_counter += 1
+                    if days_counter > 35:
+                        break
+                currencies_time_series_fx[instrument.currency] = day_price_dict
 
         df_portfolio['currency'] = currencies
 
@@ -152,15 +173,35 @@ def portfolio_value(request):
                     if str(df_time_series.date[i]) == str(day):
                         df_portfolio_prices[instrument][day] = round(df_time_series.close_price[i] * df_portfolio.quantity[instrument_counter], 5)
 
+                        # if currency in currencies fx list, daily price = daily price * fx
+                        if df_portfolio.currency[instrument_counter] in currencies_time_series_fx:
+
+                            df_portfolio_prices[instrument][day] *= Decimal(currencies_time_series_fx[df_portfolio.currency[instrument_counter]][day])
+                            df_portfolio_prices[instrument][day] = round(df_portfolio_prices[instrument][day], 5)
             instrument_counter += 1
 
         # df_portfolio_prices = df_portfolio_prices.fillna(method='ffill', axis=0)
         df_portfolio_prices = df_portfolio_prices.ffill(axis=0)
 
         df_portfolio_prices['price'] = df_portfolio_prices[list(df_portfolio_prices.columns)].sum(axis=1)
-        print(df_portfolio_prices)
 
+        # remove strings that were not filled with ffill
+        df_portfolio_prices.at['2021-06-01', instruments[0]] = np.NaN
+        df_portfolio_prices.at['2021-06-01', instruments[1]] = np.NaN
+        df_portfolio_prices.at['2021-06-01', instruments[2]] = np.NaN
 
-        return Response(data={'success': True}, status=status.HTTP_200_OK)
+        for row, columns in df_portfolio_prices.iterrows():
+            nan_columns_number = columns.isnull().sum()
+
+            if nan_columns_number == len(df_portfolio_prices.columns) - 1:
+                # delete all empty rows
+                print('delete')
+                df_portfolio_prices = df_portfolio_prices.dropna(axis=0, how='any')
+            elif nan_columns_number > 0:
+                df_portfolio_prices = df_portfolio_prices.bfill(axis=0)
+
+        # print(df_portfolio_prices)
+        df_portfolio_prices.columns = df_portfolio_prices.columns.map(str)
+        return Response(data={'success': True, 'data-frame': df_portfolio_prices.to_dict(orient='index')}, status=status.HTTP_200_OK)
 
     return Response(data={'success': False}, status=status.HTTP_400_BAD_REQUEST)

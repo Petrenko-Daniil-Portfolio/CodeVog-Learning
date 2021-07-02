@@ -2,11 +2,14 @@ import React, { useState, useEffect, useRef, Fragment } from 'react';
 import * as Constants from '../dependencies';
 
 import CheckAccess from '../../components/utils/check_access';
+import LineChart from '../../components/charts/LineChart';
 
 const PortfolioValue = (props) =>{
 
     const [user, setUser] = useState(''); // user is the one who entered page
     const [lead, setLead] = useState(''); // lead is the one whose id was passed in url
+
+    const [chartTimeSeries, setChartTimeSeries] = useState({})
 
     useEffect( () => {
         if (localStorage.getItem('token') === null) {
@@ -41,7 +44,7 @@ const PortfolioValue = (props) =>{
                         window.location.replace(Constants.SITE_URL+'Logout');
                     }
 
-                    //send request to get data from server
+                    //send request to get portfolio_value
                     fetch(Constants.SERVER_API+"portfolio_value", {
                         method: 'POST',
                         headers: {
@@ -51,7 +54,22 @@ const PortfolioValue = (props) =>{
                     })
                     .then(res => res.json())
                     .then(data => {
-                        console.log(data)
+
+                        let days_n_prices = [] //list to store date and portfolio price
+                        let portfolio_time_series = data['data-frame']
+
+                        for (let day in portfolio_time_series){
+                            let price = portfolio_time_series[day]['price']
+                            delete portfolio_time_series[day]['price']
+                            days_n_prices.push({
+                                x: Date.UTC(...day.split('-')),
+                                y: price,
+                                instruments: portfolio_time_series[day]
+                                })
+                        }
+
+                        setChartTimeSeries( {name: 'Portfolio',data: days_n_prices} )
+
                     })
                 })
             })
@@ -64,9 +82,11 @@ const PortfolioValue = (props) =>{
     return(
 
         <div>
+            {/* <h2>Portfolio Value Page</h2> */}
 
-
-            <h2>Portfolio Value Page</h2>
+            {Object.entries(chartTimeSeries).length > 0  &&
+            <LineChart chartTimeSeries = {chartTimeSeries}/>
+            }
         </div>
 
     )

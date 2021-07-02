@@ -11,6 +11,6 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'update_all_time_series': {
         'task': 'leads.tasks.update_all_time_series',
-        'schedule': crontab(minute=45, hour=9),
+        'schedule': crontab(minute=9, hour=9),
     },
 }
