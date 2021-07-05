@@ -115,93 +115,187 @@ def time_series(request):
 
 @api_view(['POST'])
 def portfolio_value(request):
-
     if request.method == "POST":
-        # get data form GET
+        # get data form request
         lead = request.data['lead']
 
         qs_portfolio = Portfolio.objects.filter(user=lead['id']).values('instrument', 'quantity')
-        df_portfolio = read_frame(qs_portfolio)
+        instruments = _get_instruments_of_portfolio(qs_portfolio)
 
-        currencies = []
-        instruments = []
+        instruments_ts = _get_instrument_time_series(instruments)
+        instruments_ts = _multiply_by_fx_rate(instruments_ts)  # get instruments time series with fx included
 
-        currencies_time_series_fx = {}
+        price_df = _instruments_ts_to_df(instruments_ts)
 
-        for row, column in df_portfolio.iterrows():
+        # get sum of all columns
+        price_df['price'] = price_df[price_df.columns].sum(axis=1)
 
-            instrument = Instrument.objects.get(symbol=column['instrument'])
-            instruments.append(instrument)
+        price_df.index = price_df.index.map(str)
+        # print(price_df)
 
-            instrument_currency = getattr(instrument, 'currency')
-            currencies.append(instrument_currency)
-
-            if instrument.currency != 'EUR' and instrument.currency not in currencies_time_series_fx:
-                response = requests.get(DataSource.TIME_SERIES_FX_QUERY.format(instrument.currency, instrument.apikey))
-                response = json.loads(response.content)['Time Series FX (Daily)']  # !!!
-
-                days_counter = 0
-                day_price_dict = {}
-                for key in response:
-                    day_price_dict[key] = response[key]['4. close']
-
-                    days_counter += 1
-                    if days_counter > 35:
-                        break
-                currencies_time_series_fx[instrument.currency] = day_price_dict
-
-        df_portfolio['currency'] = currencies
-
-        month = []  # last 30 days
-        for i in range(31, -1, -1):
-            month.append((datetime.now() - timedelta(i)).strftime('%Y-%m-%d'))
-
-        # create data frame with  indexes as days and instruments as columns
-        df_portfolio_prices = pd.DataFrame(index=month, columns=instruments)
-
-        # loop over instruments to get their time series
-        instrument_counter = 0
-        for instrument in instruments:
-            qs_time_series = TimeSeriesData.objects.filter(instrument=instrument.id).order_by('date').values('date', 'close_price')
-            df_time_series = read_frame(qs_time_series)
-
-            # loop over time series to set close prices to df_portfolio_prices
-            for i in df_time_series.index:
-
-                # loop over df_portfolio_prices to fill all empty cells with close_prices * quantity if dates are equal
-                for day in df_portfolio_prices.index:
-                    if str(df_time_series.date[i]) == str(day):
-                        df_portfolio_prices[instrument][day] = round(df_time_series.close_price[i] * df_portfolio.quantity[instrument_counter], 5)
-
-                        # if currency in currencies fx list, daily price = daily price * fx
-                        if df_portfolio.currency[instrument_counter] in currencies_time_series_fx:
-
-                            df_portfolio_prices[instrument][day] *= Decimal(currencies_time_series_fx[df_portfolio.currency[instrument_counter]][day])
-                            df_portfolio_prices[instrument][day] = round(df_portfolio_prices[instrument][day], 5)
-            instrument_counter += 1
-
-        # df_portfolio_prices = df_portfolio_prices.fillna(method='ffill', axis=0)
-        df_portfolio_prices = df_portfolio_prices.ffill(axis=0)
-
-        df_portfolio_prices['price'] = df_portfolio_prices[list(df_portfolio_prices.columns)].sum(axis=1)
-
-        # remove strings that were not filled with ffill
-        df_portfolio_prices.at['2021-06-01', instruments[0]] = np.NaN
-        df_portfolio_prices.at['2021-06-01', instruments[1]] = np.NaN
-        df_portfolio_prices.at['2021-06-01', instruments[2]] = np.NaN
-
-        for row, columns in df_portfolio_prices.iterrows():
-            nan_columns_number = columns.isnull().sum()
-
-            if nan_columns_number == len(df_portfolio_prices.columns) - 1:
-                # delete all empty rows
-                print('delete')
-                df_portfolio_prices = df_portfolio_prices.dropna(axis=0, how='any')
-            elif nan_columns_number > 0:
-                df_portfolio_prices = df_portfolio_prices.bfill(axis=0)
-
-        # print(df_portfolio_prices)
-        df_portfolio_prices.columns = df_portfolio_prices.columns.map(str)
-        return Response(data={'success': True, 'data-frame': df_portfolio_prices.to_dict(orient='index')}, status=status.HTTP_200_OK)
+        return Response(data={'success': True, 'data-frame': price_df.to_dict(orient='index')}, status=status.HTTP_200_OK)
 
     return Response(data={'success': False}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def _get_instruments_of_portfolio(portfolio):
+    """Returns list of instruments
+
+    :param list portfolio: list of instruments in lead`s portfolio
+    :return: Returns list of instruments with their quantities
+    :rtype: list of dictionaries
+    """
+    instruments = []
+    for item in portfolio:
+        instrument = Instrument.objects.get(id=item['instrument'])
+
+        instruments.append({
+            # 'instrument': instrument,
+            'id': instrument.id,
+            'apikey': instrument.apikey,
+            'currency': instrument.currency,
+            'symbol': instrument.symbol,
+            'quantity': item['quantity']
+        })
+    return instruments
+
+
+def _get_instrument_time_series(instruments):
+    """ Return instruments time series
+
+    :param list instruments: list of dictionaries. Each element contains instrument and its quantity
+    :return: List of instruments with their time series. Close price includes quantity
+    :rtype: List of dictionaries
+    """
+
+    ts = []
+    # loop over instruments to get their time series
+    for i, instrument in enumerate(instruments):
+        ts_qs = TimeSeriesData.objects.filter(instrument=instrument['id']).order_by('date').values()
+        ts.append(
+            {
+                'symbol': instrument['symbol'],
+                'apikey': instrument['apikey'],
+                'currency': instrument['currency'],
+                'time_series': []
+            }
+        )
+
+        # loop over time series to * by quantity. Add them to list of time_series
+        for time_series in ts_qs:
+            close_price = round(time_series['close_price'] * instrument['quantity'], 5)
+            ts[i]['time_series'].append({
+                'date': time_series['date'],
+                'close_price': close_price
+            })
+    return ts
+
+
+# _________
+def _get_uniq_currencies_in_time_series(time_series):
+    """Get uniq currencies in time series list except EUR
+
+    :param list[dict] time_series: list of dicts. Each element must contain currency key
+    :return: list of currencies
+    :rtype: list[str]
+    """
+    currencies = []
+    for item in time_series:
+        if item['currency'] not in currencies and item['currency'] != 'EUR':
+            currencies.append(item['currency'])
+
+    return currencies
+
+
+def _get_time_series_with_fx_rate(currencies, apikey, limit=45):
+    """Return time_series of currencies and their fx rates for past 45 days
+
+    :param list[str] currencies: list of currencies
+    :param str apikey: apikey to make request to data source
+    :param int limit: integer, shows how many days to return
+    :return: dict days are keys, fix rate close prices are values
+    """
+    fx_rate_time_series = {}
+    for currency in currencies:
+        req_url = DataSource.TIME_SERIES_FX_QUERY.format(currency, apikey)
+        response = requests.get(req_url)
+        response = json.loads(response.content)['Time Series FX (Daily)']
+
+        fx_rate_time_series[currency] = {}
+
+        counter = 0
+        for day in response:
+            fx_rate_time_series[currency][day] = response[day]['4. close']
+            counter += 1
+            if counter == limit:
+                break
+
+    return fx_rate_time_series
+
+
+def _multiply_by_fx_rate(instruments):
+    """Include fix rate in close_price field
+
+    :param instruments: list of dicts. Each dict represents single time series of instrument.
+    :return: list of time series with fix rate included in close_price
+    :rtype: list of dicts
+    """
+
+    currencies = _get_uniq_currencies_in_time_series(instruments)
+
+    # if there are more than 4 currencies we will be banned for 1 min so we need to call celery task
+    if len(currencies) > 4:
+        pass  # TODO add task to call if there will be more than 4 requests
+
+    apikey = instruments[0]['apikey']  # lead has one fin advisor so we can use any apikey
+    fx_rate_time_series = _get_time_series_with_fx_rate(currencies, apikey)
+
+    # loop over instruments
+    for instrument in instruments:
+        currency = instrument['currency']
+        if currency == 'EUR':
+            continue
+
+        time_series = instrument['time_series']
+
+        for row in time_series:
+            try:
+                date = str(row['date'])
+                row['close_price'] = round(row['close_price'] * Decimal(fx_rate_time_series[currency][date]), 5)
+
+            except KeyError:
+                print('\033[93m' + 'ERROR' + '\033[0m')
+                print('There is no such date in fx_rate_time_series. Try to pass'
+                      'bigger limit to func: _get_time_series_with_fx_rate()')
+
+    return instruments
+
+
+def _instruments_ts_to_df(instruments_ts):
+    """Return time series data frame of instruments with close prices
+
+    :param list[dict] instruments_ts: list of instruments where each instrument is dict
+    :return: pandas data frame with dates as indexes, instruments as columns and close_prices as cells
+    :rtype: pd.DataFrame
+    """
+    price_df = pd.DataFrame()
+
+    for item in instruments_ts:
+        df = pd.DataFrame(item.get('time_series'), columns=['close_price', 'date'])
+        df = df.rename(columns={"close_price": item['symbol'],
+                                "date": "Date"})
+        df.set_index(keys='Date', inplace=True)
+
+        # if axis = 0 we will duplicate indexes (add them to the end of df), but we want to add columns
+        price_df = pd.concat([price_df, df], axis=1)
+        price_df.sort_index(inplace=True)
+
+    price_df.fillna(method='ffill', inplace=True)
+
+    # if first day of all tools is NaN - delete it. else - make bfill
+    price_df.dropna(axis=0, how='all', inplace=True)
+
+    if price_df.columns.isnull().sum() == len(price_df.columns):
+        price_df.fillna(method='bfill', inplace=True)
+
+    return price_df

@@ -54,7 +54,7 @@ const PortfolioValue = (props) =>{
                     })
                     .then(res => res.json())
                     .then(data => {
-
+                        console.log(data)
                         let days_n_prices = [] //list to store date and portfolio price
                         let portfolio_time_series = data['data-frame']
 
