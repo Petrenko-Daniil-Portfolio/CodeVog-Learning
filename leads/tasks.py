@@ -20,7 +20,7 @@ def create_time_series(self, instrument_symbol, fin_advisor_apikey):
 
     # 1) send request to data source
     response = requests.get(
-        DataSource.TIME_SERIES_DAIL_QUERY + instrument_symbol + '&apikey=' + fin_advisor_apikey)
+        DataSource.TIME_SERIES_DAIL_QUERY.format(instrument_symbol, fin_advisor_apikey))
 
     # 2) call celery task
     response = json.loads(response.content)
@@ -45,7 +45,7 @@ def create_time_series(self, instrument_symbol, fin_advisor_apikey):
 @app.task(bind=True)
 def update_single_time_series(self, instrument_id, instrument_symbol, instrument_apikey):
     # send request to get time series
-    request = DataSource.TIME_SERIES_DAIL_QUERY + instrument_symbol + '&apikey=' + instrument_apikey
+    request = DataSource.TIME_SERIES_DAIL_QUERY.format(instrument_symbol, instrument_apikey)
     response = requests.get(request)
     response = json.loads(response.content)
 

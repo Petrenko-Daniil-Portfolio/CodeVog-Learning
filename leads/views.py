@@ -234,11 +234,11 @@ def _get_time_series_with_fx_rate(currencies, apikey, limit=45):
 
 
 def _multiply_by_fx_rate(instruments):
-    """Include fix rate in close_price field
+    """Return instrument with time series which where multiplied by quantity of instruments in portfolio
 
-    :param instruments: list of dicts. Each dict represents single time series of instrument.
+    :param list[dict[str]] instruments: list of dicts. Each dict represents single time series of instrument.
     :return: list of time series with fix rate included in close_price
-    :rtype: list of dicts
+    :rtype: list[dict]
     """
 
     currencies = _get_uniq_currencies_in_time_series(instruments)
