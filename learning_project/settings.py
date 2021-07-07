@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'leads.apps.LeadsConfig',
 
     # 3-d party
+    # 'openpyxl',
     'coverage',
     'rest_framework',
     'rest_framework.authtoken',
@@ -183,11 +184,11 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.TokenAuthentication',],
 }
 
-#REDIS and CELERY
+# REDIS
 REDIS_HOST = '127.0.0.1'
 REDIS_PORT = '6379'
 
-
+# CELERY
 CELERY_BROKER_URL = 'redis://redis:6379'
 CELERY_TIMEZONE = 'Europe/Kiev'
 CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
@@ -195,4 +196,13 @@ CELERY_RESULT_BACKEND = 'redis://redis:6379'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+# EMAIL SETTING
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 'django.core.mail.backends.console.EmailBackend' 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+
 

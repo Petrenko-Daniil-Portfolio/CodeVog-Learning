@@ -1,5 +1,6 @@
 from django.urls import include, path
 from leads import views
+from leads import send_info
 
 urlpatterns = [
     path('api/lead/', views.GetAllLeads.as_view()),
@@ -16,7 +17,9 @@ urlpatterns = [
 
     path('api/time_series/', views.time_series),  # create time series 4 one instrument
 
-    path('api/portfolio_value', views.portfolio_value), # get portfolio value data
+    path('api/portfolio_value', views.portfolio_value),  # get portfolio value data
+
+    path('api/send_email/', send_info.send_email),  # send email after portfolio update
 
     path('api/lead/auth/', include('rest_auth.urls')),
     path('api/lead/auth/register/', include('rest_auth.registration.urls'))

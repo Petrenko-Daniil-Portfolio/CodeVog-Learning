@@ -116,10 +116,10 @@ const BasicLineChart = ( {UpdateChartLinesMethod_ref, finInstruments, lead} ) =>
 
     const buildAllChartLines = async () => {
 
-        console.log("I was called")
-
+//        console.log("I was called")
+//        console.log('+-+')
         let time_series_list = []  // list of dicts [ {name: '', data: []}, {name: '', data: []} ]
-        console.log('+-+')
+
 
         for (let index in finInstruments){
 

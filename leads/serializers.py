@@ -13,7 +13,8 @@ class LeadSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        lead = Lead.objects.create_user(username=validated_data['username'], email=validated_data['email'])
+        # ADDED last argument recently might cause some errors
+        lead = Lead.objects.create_user(username=validated_data['username'], email=validated_data['email'], password=validated_data['password'])
         lead.save()
 
 

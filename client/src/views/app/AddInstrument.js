@@ -26,7 +26,7 @@ const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_a
     e.preventDefault();
 
 //    if (clearOptions){
-
+        // try to get instrument from our DB via symbol
         fetch(Constants.SERVER_API+'fin_instrument/?symbol='+symbol, {
             method: 'GET',
             headers: {
@@ -35,8 +35,8 @@ const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_a
         })
         .then(res => res.json())
         .then( async (data) => {
-            //data is instrument we seatched
-            //id data == 0 we have no such instrument in our db
+            //data is instrument we searched
+            //if data == 0 we have no such instrument in our db
 
             if(data.length == 0){
                 /*
@@ -48,7 +48,7 @@ const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_a
 
                 let req_url = Constants.DATA_SOURCE_QUERY+'function=SYMBOL_SEARCH&keywords='+symbol+'&apikey='+apikey
 
-                //fetch to get data
+                //fetch to get possible instruments form data source
                 fetch(req_url, {
                     method: 'GET',
                     headers: {
@@ -88,6 +88,7 @@ const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_a
                     })
                     .then(res => res.json())
                     .then(response_data => {
+
                         console.log(response_data)
                         updInstrument(response_data, 'update')
                     })
@@ -154,9 +155,7 @@ const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_a
             //Check if it is present in our portfolio
             var instrument_to_upd = null
             for (var row in portfolio){
-                console.log("-------------")
-                console.log(portfolio[row])
-                console.log(data)
+
                 if (portfolio[row].instrument === data[0].id){
                     instrument_to_upd = portfolio[row]
                 }
@@ -243,7 +242,7 @@ const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_a
 
                 //create time series for this tool
                 /*
-                    1) Send req to data sourse
+                    1) Send req to data source
                     2) Send response to my view
                 */
 
@@ -272,7 +271,7 @@ const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_a
                 //add instrument to portfolio
                 let portfolio = {}
                 portfolio['user'] = leadId
-                portfolio['instrument'] = instrument_data.id //dinstrument_data.id - fin_instrument id
+                portfolio['instrument'] = instrument_data.id //instrument_data.id - fin_instrument id
                 portfolio['quantity'] = quantity
 
                 let portfolio_req_url = Constants.SERVER_API+'portfolio/'
@@ -287,8 +286,8 @@ const AddInstrument = ({UpdateChartLinesMethod_ref, leadId, updInstrument, fin_a
                 .then( portfolio_res => portfolio_res.json())
                 .then(portfolio_data => {
 
-                    console.log(instrument_data)
-                    console.log(portfolio_data)
+                    //console.log(instrument_data)
+                    //console.log(portfolio_data)
 
                     updInstrument(instrument_data, 'create', portfolio_data)
 
