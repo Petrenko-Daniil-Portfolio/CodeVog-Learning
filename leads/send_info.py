@@ -15,7 +15,8 @@ from datetime import datetime
 
 import io
 
-import json
+import pandas
+import openpyxl
 import requests
 
 from decimal import Decimal
@@ -30,6 +31,7 @@ def send_email(request):
     instrument = request.data['instrument']
     instrument['status'] = request.data['status']
     old_quantity = request.data['old_quantity']
+    #new quantity
 
     lead = request.data['lead']
     fin_advisor = model_to_dict(Lead.objects.get(id=lead['fin_advisor']))

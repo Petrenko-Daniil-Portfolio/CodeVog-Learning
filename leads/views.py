@@ -1,30 +1,19 @@
-import numpy as np
-
 from .models import Lead, Portfolio, Instrument, TimeSeriesData
 from .serializers import LeadSerializer, PortfolioSerializer, InstrumentSerializer, TimeSeriesDataSerializer
 from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-
 from django_filters.rest_framework import DjangoFilterBackend
-
 from .tasks import create_time_series, update_all_time_series, update_single_time_series
-
 from .errors import RequestLimitError
-
-from django_pandas.io import read_frame
+from decimal import Decimal
+from .data_source import DataSource
+from .errors import DuplicateDatesInInstrumentTimeSeries
 
 import json
 import requests
-
-from decimal import Decimal
-
 import pandas as pd
-from datetime import datetime, timedelta
-
-from .data_source import DataSource
-
 
 class GetAllLeads(generics.ListCreateAPIView):
     queryset = Lead.objects.all()
@@ -117,23 +106,26 @@ def time_series(request):
 def portfolio_value(request):
     if request.method == "POST":
         # get data form request
+
         lead = request.data['lead']
 
         qs_portfolio = Portfolio.objects.filter(user=lead['id']).values('instrument', 'quantity')
+
         instruments = _get_instruments_of_portfolio(qs_portfolio)
+
 
         instruments_ts = _get_instrument_time_series(instruments)
         instruments_ts = _multiply_by_fx_rate(instruments_ts)  # get instruments time series with fx included
 
         price_df = _instruments_ts_to_df(instruments_ts)
-
         # get sum of all columns
         price_df['price'] = price_df[price_df.columns].sum(axis=1)
 
         price_df.index = price_df.index.map(str)
         # print(price_df)
+        df = price_df.to_dict(orient='index')
 
-        return Response(data={'success': True, 'data-frame': price_df.to_dict(orient='index')}, status=status.HTTP_200_OK)
+        return Response(data={'success': True, 'data-frame': df}, status=status.HTTP_200_OK)
 
     return Response(data={'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -258,15 +250,25 @@ def _multiply_by_fx_rate(instruments):
 
         time_series = instrument['time_series']
 
-        for row in time_series:
+        last_existing_date = None  # this part is used to avoid corner cases
+        for i, row in enumerate(time_series):
+            # print(str(i) + "-------------------")
+            # print(row, instrument['symbol'])
             try:
                 date = str(row['date'])
-                row['close_price'] = round(row['close_price'] * Decimal(fx_rate_time_series[currency][date]), 5)
+                row['close_price'] = row['close_price'] * Decimal(fx_rate_time_series[currency][date])
+                last_existing_date = date
 
             except KeyError:
-                print('\033[93m' + 'ERROR' + '\033[0m')
-                print('There is no such date in fx_rate_time_series. Try to pass'
-                      'bigger limit to func: _get_time_series_with_fx_rate()')
+
+                if last_existing_date is not None:
+                    row['close_price'] = row['close_price'] * Decimal(fx_rate_time_series[currency][last_existing_date])
+                else:
+
+                    last_existing_date = fx_rate_time_series[currency].keys()[0]  # select first available day
+                    row['close_price'] = row['close_price'] * Decimal(fx_rate_time_series[currency][last_existing_date])
+
+            row['close_price'] = round(row['close_price'], 5)
 
     return instruments
 
@@ -287,15 +289,25 @@ def _instruments_ts_to_df(instruments_ts):
         df.set_index(keys='Date', inplace=True)
 
         # if axis = 0 we will duplicate indexes (add them to the end of df), but we want to add columns
-        price_df = pd.concat([price_df, df], axis=1)
-        price_df.sort_index(inplace=True)
+        try:
+            price_df = pd.concat([price_df, df], axis=1)
+            price_df.sort_index(inplace=True)
+
+        except pd.errors.InvalidIndexError:
+            print('\033[93m' + 'ERROR' + '\033[0m')
+            print('You have duplicate dates in '+item['symbol']+" time series")
+            raise(DuplicateDatesInInstrumentTimeSeries(instrument=item['symbol']))
 
     price_df.fillna(method='ffill', inplace=True)
 
     # if first day of all tools is NaN - delete it. else - make bfill
-    price_df.dropna(axis=0, how='all', inplace=True)
+    if price_df.iloc[0].isnull().sum()== len(price_df.columns):
+        price_df.dropna(axis=0, how='all', inplace=True)
 
-    if price_df.columns.isnull().sum() == len(price_df.columns):
-        price_df.fillna(method='bfill', inplace=True)
+    for col in price_df:
+
+        nan_elems_number = price_df[col].isnull().sum()
+        if nan_elems_number > 0:
+            price_df.fillna(method='bfill', inplace=True)
 
     return price_df

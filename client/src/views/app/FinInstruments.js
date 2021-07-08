@@ -110,7 +110,7 @@ const FinInstruments = (props) => {
 
     const sendEmail = (old_quantity, instrument, status) => {
         // send fetch to send mail
-        console.log("INSTRUMENT")
+
         console.log(instrument)
         let req_body = {
             'status': status,

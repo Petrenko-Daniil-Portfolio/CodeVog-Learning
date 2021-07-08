@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'leads.apps.LeadsConfig',
 
     # 3-d party
-    # 'openpyxl',
+    'openpyxl',
     'coverage',
     'rest_framework',
     'rest_framework.authtoken',
