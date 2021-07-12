@@ -15,12 +15,16 @@ urlpatterns = [
 
     path('api/time_series_data/', views.TimeSeriesDataView.as_view()),  # time series data
 
-    path('api/time_series/', views.time_series),  # create time series 4 one instrument
+    path('api/time_series/', views.time_series),  # create time series for one instrument
 
-    path('api/portfolio_value', views.portfolio_value),  # get portfolio value data
+    path('api/portfolio_value', views.portfolio_value),  # get portfolio value data (it uses POST method)
+    path('api/portfolio_values/<advisor_id>', views.portfolio_values_of_advisor),  # get portfolio values of all advisor`s leads
 
-    path('api/send_email/', send_info.send_email),  # send email after portfolio update
+    path('api/send_email/', send_info.create_options),  # create option that will be send to user due to celery schedule
 
     path('api/lead/auth/', include('rest_auth.urls')),
-    path('api/lead/auth/register/', include('rest_auth.registration.urls'))
+    path('api/lead/auth/register/', include('rest_auth.registration.urls')),
+
+
+    path('test', views.test_view)  # test view to check if things work
 ]

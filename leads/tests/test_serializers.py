@@ -1,5 +1,5 @@
 from django.test import TestCase
-from leads.models import *
+
 from leads.serializers import *
 
 
@@ -159,5 +159,3 @@ class TestSerializers(TestCase):
 
         self.assertFalse(test_serializer.is_valid())
         # self.assertEqual(test_serializer.errors.keys(), {'currency'})
-
-

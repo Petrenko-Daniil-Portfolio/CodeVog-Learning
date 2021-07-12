@@ -1,19 +1,28 @@
-from .models import Lead, Portfolio, Instrument, TimeSeriesData
-from .serializers import LeadSerializer, PortfolioSerializer, InstrumentSerializer, TimeSeriesDataSerializer
+import json
+from decimal import Decimal
+
+import pandas as pd
+import requests
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
-from django_filters.rest_framework import DjangoFilterBackend
-from .tasks import create_time_series, update_all_time_series, update_single_time_series
-from .errors import RequestLimitError
-from decimal import Decimal
+
 from .data_source import DataSource
 from .errors import DuplicateDatesInInstrumentTimeSeries
+from .errors import RequestLimitError
+from .models import Lead, Portfolio, Instrument, TimeSeriesData
+from .serializers import LeadSerializer, PortfolioSerializer, InstrumentSerializer, TimeSeriesDataSerializer
+from .tasks import create_time_series, update_all_time_series, update_single_time_series
+from django.http import HttpResponse
 
-import json
-import requests
-import pandas as pd
+from django.core.cache import cache
+
+@api_view(['GET'])
+def test_view(request):
+
+    return HttpResponse("Cache: "+cache.get('key', None))
 
 class GetAllLeads(generics.ListCreateAPIView):
     queryset = Lead.objects.all()
@@ -70,6 +79,12 @@ def portfolio_rows_of_lead(request, lead_id):
 
 @api_view(['POST', 'PUT', 'PATCH', 'DELETE'])
 def time_series(request):
+    """Endpoint to create time_series for instrument
+
+    :param request:
+    :return: Response with success: try key value pair
+    :rtype: Response
+    """
     if request.method == 'POST':
         # get data from POST
         symbol = request.data['symbol']
@@ -84,7 +99,6 @@ def time_series(request):
         update_all_time_series()
 
     if request.method == 'PATCH':
-
         instrument_id = request.data['instrument_id']
 
         symbol = request.data['instrument_symbol']
@@ -92,7 +106,6 @@ def time_series(request):
         update_single_time_series.apply_async((instrument_id, symbol, apikey), countdown=30)
 
     if request.method == 'DELETE':
-
         symbol = request.data['instrument_symbol']
         apikey = request.data['instrument_apikey']
 
@@ -104,15 +117,19 @@ def time_series(request):
 
 @api_view(['POST'])
 def portfolio_value(request):
+    """Endpoint to get portfolio value time series dataframe
+
+    :param request:
+    :return: Response with dataframe that contains portfolio values for past 30 days including fx rates
+    :rtype: Response
+    """
     if request.method == "POST":
         # get data form request
-
         lead = request.data['lead']
 
         qs_portfolio = Portfolio.objects.filter(user=lead['id']).values('instrument', 'quantity')
 
         instruments = _get_instruments_of_portfolio(qs_portfolio)
-
 
         instruments_ts = _get_instrument_time_series(instruments)
         instruments_ts = _multiply_by_fx_rate(instruments_ts)  # get instruments time series with fx included
@@ -130,12 +147,49 @@ def portfolio_value(request):
     return Response(data={'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+def portfolio_values_of_advisor(request, advisor_id):
+    advisor = Lead.objects.get(id=advisor_id)
+    serializer = LeadSerializer(advisor)
+
+    leads_of_advisor = Lead.objects.filter(fin_advisor=advisor, is_staff=False)
+
+    # convert each lead to dict
+    leads_of_advisor = [LeadSerializer(lead).data for lead in leads_of_advisor]
+
+    portfolio_values = {}  # dict
+    for lead in leads_of_advisor:
+
+        qs_portfolio = Portfolio.objects.filter(user=lead['id']).values('instrument', 'quantity')
+
+        instruments = _get_instruments_of_portfolio(qs_portfolio)
+
+        instruments_ts = _get_instrument_time_series(instruments)
+        instruments_ts = _multiply_by_fx_rate(instruments_ts)  # get instruments time series with fx included
+
+        price_df = _instruments_ts_to_df(instruments_ts)
+        # get sum of all columns
+        price_df['price'] = price_df[price_df.columns].sum(axis=1)
+
+        price_df.index = price_df.index.map(str)
+        # print(price_df)
+        df = price_df.to_dict(orient='index')
+
+        portfolio_values[lead['email']] = df
+
+    # for df in portfolio_values:
+    #     print(df)
+    #     print("--------------------")
+
+    return Response(data={'success': True, "data-frames": portfolio_values}, status=status.HTTP_200_OK)
+
+
 def _get_instruments_of_portfolio(portfolio):
     """Returns list of instruments
 
     :param list portfolio: list of instruments in lead`s portfolio
     :return: Returns list of instruments with their quantities
-    :rtype: list of dictionaries
+    :rtype: list[dict]
     """
     instruments = []
     for item in portfolio:
@@ -157,7 +211,7 @@ def _get_instrument_time_series(instruments):
 
     :param list instruments: list of dictionaries. Each element contains instrument and its quantity
     :return: List of instruments with their time series. Close price includes quantity
-    :rtype: List of dictionaries
+    :rtype: list[dict]
     """
 
     ts = []
@@ -183,7 +237,6 @@ def _get_instrument_time_series(instruments):
     return ts
 
 
-# _________
 def _get_uniq_currencies_in_time_series(time_series):
     """Get uniq currencies in time series list except EUR
 
@@ -205,13 +258,20 @@ def _get_time_series_with_fx_rate(currencies, apikey, limit=45):
     :param list[str] currencies: list of currencies
     :param str apikey: apikey to make request to data source
     :param int limit: integer, shows how many days to return
-    :return: dict days are keys, fix rate close prices are values
+    :return: dict where days are keys, fix rate close prices are values
+    :rtype: dict
     """
     fx_rate_time_series = {}
     for currency in currencies:
-        req_url = DataSource.TIME_SERIES_FX_QUERY.format(currency, apikey)
-        response = requests.get(req_url)
-        response = json.loads(response.content)['Time Series FX (Daily)']
+        # print(currency)
+        response = cache.get(currency+"_fx", None)
+        if response is None:
+            print("+")
+            req_url = DataSource.TIME_SERIES_FX_QUERY.format(currency, apikey)
+            response = requests.get(req_url)
+            response = json.loads(response.content)['Time Series FX (Daily)']
+            cache.set(currency+"_fx", response, 60*60)
+        # print("---------")
 
         fx_rate_time_series[currency] = {}
 
@@ -249,7 +309,6 @@ def _multiply_by_fx_rate(instruments):
             continue
 
         time_series = instrument['time_series']
-
         last_existing_date = None  # this part is used to avoid corner cases
         for i, row in enumerate(time_series):
             # print(str(i) + "-------------------")
@@ -294,14 +353,14 @@ def _instruments_ts_to_df(instruments_ts):
             price_df.sort_index(inplace=True)
 
         except pd.errors.InvalidIndexError:
-            print('\033[93m' + 'ERROR' + '\033[0m')
-            print('You have duplicate dates in '+item['symbol']+" time series")
-            raise(DuplicateDatesInInstrumentTimeSeries(instrument=item['symbol']))
+            print('\n\033[93m' + 'CUSTOM ERROR' + '\033[0m')
+            print('You have duplicate dates in ' + item['symbol'] + " time series\n")
+            raise (DuplicateDatesInInstrumentTimeSeries(instrument=item['symbol']))
 
     price_df.fillna(method='ffill', inplace=True)
 
     # if first day of all tools is NaN - delete it. else - make bfill
-    if price_df.iloc[0].isnull().sum()== len(price_df.columns):
+    if price_df.iloc[0].isnull().sum() == len(price_df.columns):
         price_df.dropna(axis=0, how='all', inplace=True)
 
     for col in price_df:

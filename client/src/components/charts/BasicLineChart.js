@@ -23,7 +23,7 @@ const BasicLineChart = ( {UpdateChartLinesMethod_ref, finInstruments, lead} ) =>
 
     useEffect( () => {
         buildAllChartLines()
-        UpdateChartLinesMethod_ref.current = buildAllChartLines
+        UpdateChartLinesMethod_ref.current = buildAllChartLines // save method to state so that other child could rerender chart if new tool was added
     }, [finInstruments])
 
     const buildChartLine = () => {

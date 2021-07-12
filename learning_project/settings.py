@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'leads.apps.LeadsConfig',
 
     # 3-d party
+    # 'django_memcached',
     'openpyxl',
     'coverage',
     'rest_framework',
@@ -131,9 +132,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'leads.Lead'
 
-AUTHENTICATION_BACKENDS = (
-        'django.contrib.auth.backends.ModelBackend',
-    )
+# AUTHENTICATION_BACKENDS = (
+#         'django.contrib.auth.backends.ModelBackend',
+#     )
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
@@ -171,8 +172,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ORIGIN_ALLOW_ALL = True
 
 # Django All Auth config.
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",    "allauth.account.auth_backends.AuthenticationBackend", )
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",
+                           "allauth.account.auth_backends.AuthenticationBackend",)
 SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
@@ -198,11 +200,43 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 # EMAIL SETTING
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 'django.core.mail.backends.console.EmailBackend' 'django.core.mail.backends.smtp.EmailBackend'
+# DEBUG: 'django.core.mail.backends.console.EmailBackend'
+# LIVE:  'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 
+# CACHE
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': 'cache:11211',
+    }
+}
+
+# CACHES = {
+#     'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#     'LOCATION': 'memcached:11211'
+# }
+# cache:
+# image: memcached
+# ports:
+# - '11211:11211'
+# entrypoint:
+# - memcached
+# - -m
+# 64
+# depends_on:
+# - web
+
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+#         'LOCATION': '0.0.0.0:11211',
+#     }
+# }
 

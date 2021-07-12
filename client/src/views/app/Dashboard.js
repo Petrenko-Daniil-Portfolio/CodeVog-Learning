@@ -2,6 +2,8 @@ import React, { useState, useEffect, Fragment } from 'react';
 import * as Constants from '../dependencies';
 import DjangoCSRFToken from 'django-react-csrftoken'
 
+import BasicBarChart from '../../components/charts/BasicBarChart';
+
 const Dashboard = () => {
   const [user, setUser] = useState('');
 
@@ -228,6 +230,14 @@ const Dashboard = () => {
                   </tbody>
 
               </table>
+
+              {user != '' &&
+                /* Bar chart will load here */
+                <div>
+
+                <BasicBarChart user = {user} />
+                </div>
+              }
 
             </Fragment>
           )}

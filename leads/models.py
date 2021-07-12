@@ -73,9 +73,13 @@ class TimeSeriesData(TimeStampedModel):
 
 # new model
 class PortfolioOperations(models.Model):
-    date = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField(auto_now=True)
     operation = models.CharField(max_length=30)
     instrument = models.ForeignKey(Instrument, on_delete=models.DO_NOTHING)
     lead = models.ForeignKey(Lead, on_delete=models.CASCADE)
-    olq_quantity = models.IntegerField(validators=[MinValueValidator(0.0)])
+    old_quantity = models.IntegerField(validators=[MinValueValidator(0.0)])
     new_quantity = models.IntegerField(validators=[MinValueValidator(0.0)])
+
+    objects = models.Manager
+
+
