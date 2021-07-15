@@ -139,7 +139,7 @@ def portfolio_value(request):
         price_df['price'] = price_df[price_df.columns].sum(axis=1)
 
         price_df.index = price_df.index.map(str)
-        # print(price_df)
+        print(price_df)
         df = price_df.to_dict(orient='index')
 
         return Response(data={'success': True, 'data-frame': df}, status=status.HTTP_200_OK)
@@ -149,6 +149,9 @@ def portfolio_value(request):
 
 @api_view(['GET'])
 def portfolio_values_of_advisor(request, advisor_id):
+    # limit to get only last certain amount of days
+    limit = 4
+
     advisor = Lead.objects.get(id=advisor_id)
     serializer = LeadSerializer(advisor)
 
@@ -164,22 +167,25 @@ def portfolio_values_of_advisor(request, advisor_id):
 
         instruments = _get_instruments_of_portfolio(qs_portfolio)
 
-        instruments_ts = _get_instrument_time_series(instruments)
-        instruments_ts = _multiply_by_fx_rate(instruments_ts)  # get instruments time series with fx included
+        instruments_ts = _get_instrument_time_series(instruments, limit=limit)
 
-        price_df = _instruments_ts_to_df(instruments_ts)
+        instruments_ts = _multiply_by_fx_rate(instruments_ts, limit=limit)  # get instruments time series with fx included
+
+        # for t in instruments_ts:
+        #     print(t['symbol'])
+        #     for s in t['time_series']:
+        #         print(s['date'])
+
+        price_df = _instruments_ts_to_df(instruments_ts, limit)
+
         # get sum of all columns
         price_df['price'] = price_df[price_df.columns].sum(axis=1)
 
         price_df.index = price_df.index.map(str)
-        # print(price_df)
+        #print(price_df)
         df = price_df.to_dict(orient='index')
 
         portfolio_values[lead['email']] = df
-
-    # for df in portfolio_values:
-    #     print(df)
-    #     print("--------------------")
 
     return Response(data={'success': True, "data-frames": portfolio_values}, status=status.HTTP_200_OK)
 
@@ -206,7 +212,7 @@ def _get_instruments_of_portfolio(portfolio):
     return instruments
 
 
-def _get_instrument_time_series(instruments):
+def _get_instrument_time_series(instruments, limit=None):
     """ Return instruments time series
 
     :param list instruments: list of dictionaries. Each element contains instrument and its quantity
@@ -217,7 +223,14 @@ def _get_instrument_time_series(instruments):
     ts = []
     # loop over instruments to get their time series
     for i, instrument in enumerate(instruments):
-        ts_qs = TimeSeriesData.objects.filter(instrument=instrument['id']).order_by('date').values()
+
+        # select first limit rows if limit was passed
+        if limit is not None:
+            ts_qs = TimeSeriesData.objects.filter(instrument=instrument['id']).order_by('-date')[:limit].values()
+            ts_qs = reversed(ts_qs)
+        else:
+            ts_qs = TimeSeriesData.objects.filter(instrument=instrument['id']).order_by('date').values()
+
         ts.append(
             {
                 'symbol': instrument['symbol'],
@@ -228,12 +241,16 @@ def _get_instrument_time_series(instruments):
         )
 
         # loop over time series to * by quantity. Add them to list of time_series
-        for time_series in ts_qs:
+        for counter, time_series in enumerate(ts_qs):
             close_price = round(time_series['close_price'] * instrument['quantity'], 5)
             ts[i]['time_series'].append({
                 'date': time_series['date'],
                 'close_price': close_price
             })
+    # for elem in ts:
+    #     for j in elem['time_series']:
+    #         print(j)
+    # print("-----------------")
     return ts
 
 
@@ -263,15 +280,14 @@ def _get_time_series_with_fx_rate(currencies, apikey, limit=45):
     """
     fx_rate_time_series = {}
     for currency in currencies:
-        # print(currency)
+
         response = cache.get(currency+"_fx", None)
         if response is None:
-            print("+")
             req_url = DataSource.TIME_SERIES_FX_QUERY.format(currency, apikey)
             response = requests.get(req_url)
             response = json.loads(response.content)['Time Series FX (Daily)']
             cache.set(currency+"_fx", response, 60*60)
-        # print("---------")
+
 
         fx_rate_time_series[currency] = {}
 
@@ -285,7 +301,7 @@ def _get_time_series_with_fx_rate(currencies, apikey, limit=45):
     return fx_rate_time_series
 
 
-def _multiply_by_fx_rate(instruments):
+def _multiply_by_fx_rate(instruments, limit=45):
     """Return instrument with time series which where multiplied by quantity of instruments in portfolio
 
     :param list[dict[str]] instruments: list of dicts. Each dict represents single time series of instrument.
@@ -300,7 +316,7 @@ def _multiply_by_fx_rate(instruments):
         pass  # TODO add task to call if there will be more than 4 requests
 
     apikey = instruments[0]['apikey']  # lead has one fin advisor so we can use any apikey
-    fx_rate_time_series = _get_time_series_with_fx_rate(currencies, apikey)
+    fx_rate_time_series = _get_time_series_with_fx_rate(currencies, apikey, limit)
 
     # loop over instruments
     for instrument in instruments:
@@ -311,8 +327,7 @@ def _multiply_by_fx_rate(instruments):
         time_series = instrument['time_series']
         last_existing_date = None  # this part is used to avoid corner cases
         for i, row in enumerate(time_series):
-            # print(str(i) + "-------------------")
-            # print(row, instrument['symbol'])
+
             try:
                 date = str(row['date'])
                 row['close_price'] = row['close_price'] * Decimal(fx_rate_time_series[currency][date])
@@ -323,8 +338,8 @@ def _multiply_by_fx_rate(instruments):
                 if last_existing_date is not None:
                     row['close_price'] = row['close_price'] * Decimal(fx_rate_time_series[currency][last_existing_date])
                 else:
-
-                    last_existing_date = fx_rate_time_series[currency].keys()[0]  # select first available day
+                    dates = list(fx_rate_time_series[currency].keys())
+                    last_existing_date = dates[0]  # select first available day
                     row['close_price'] = row['close_price'] * Decimal(fx_rate_time_series[currency][last_existing_date])
 
             row['close_price'] = round(row['close_price'], 5)
@@ -332,7 +347,7 @@ def _multiply_by_fx_rate(instruments):
     return instruments
 
 
-def _instruments_ts_to_df(instruments_ts):
+def _instruments_ts_to_df(instruments_ts, limit=None):
     """Return time series data frame of instruments with close prices
 
     :param list[dict] instruments_ts: list of instruments where each instrument is dict
@@ -340,7 +355,7 @@ def _instruments_ts_to_df(instruments_ts):
     :rtype: pd.DataFrame
     """
     price_df = pd.DataFrame()
-
+    counter = 0
     for item in instruments_ts:
         df = pd.DataFrame(item.get('time_series'), columns=['close_price', 'date'])
         df = df.rename(columns={"close_price": item['symbol'],
@@ -349,13 +364,30 @@ def _instruments_ts_to_df(instruments_ts):
 
         # if axis = 0 we will duplicate indexes (add them to the end of df), but we want to add columns
         try:
-            price_df = pd.concat([price_df, df], axis=1)
+            if counter > 0:
+
+                if price_df.index[-1] > df.index[-1]:
+                    price_df = pd.merge(price_df, df, how='left', left_index=True, right_index=True)
+                elif price_df.index[-1] < df.index[-1]:
+                    price_df = pd.merge(price_df, df, left_index=True, right_index=True)
+                else:
+                    price_df = pd.merge(price_df, df, how='outer', left_index=True, right_index=True)
+            else:
+                price_df = pd.concat([price_df, df], axis=1)
+
+            # price_df = pd.concat([price_df, df], axis=1)
             price_df.sort_index(inplace=True)
 
         except pd.errors.InvalidIndexError:
             print('\n\033[93m' + 'CUSTOM ERROR' + '\033[0m')
             print('You have duplicate dates in ' + item['symbol'] + " time series\n")
             raise (DuplicateDatesInInstrumentTimeSeries(instrument=item['symbol']))
+
+        counter += 1
+
+    if limit is not None and len(price_df) > limit:
+        while len(price_df) > limit:
+            price_df.drop(index=price_df.index[0], axis=0, inplace=True)
 
     price_df.fillna(method='ffill', inplace=True)
 

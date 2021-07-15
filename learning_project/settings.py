@@ -53,8 +53,11 @@ INSTALLED_APPS = [
     # 'django_memcached',
     'openpyxl',
     'coverage',
+
+    #REST
     'rest_framework',
     'rest_framework.authtoken',
+
     'django_filters',  # did not work for some reason
     'rest_auth',
     'django.contrib.sites',

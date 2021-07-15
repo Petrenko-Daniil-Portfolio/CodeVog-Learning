@@ -33,3 +33,7 @@ class TimeSeriesDataAdmin(admin.ModelAdmin):
 class PortfolioOperationsAdmin(admin.ModelAdmin):
     list_display = ('lead', 'operation', 'instrument', 'old_quantity', 'new_quantity', 'timestamp')
 
+
+@admin.register(Invitations)
+class InvitationsAdmin(admin.ModelAdmin):
+    list_display = ('email', 'status', 'fin_advisor', 'date')

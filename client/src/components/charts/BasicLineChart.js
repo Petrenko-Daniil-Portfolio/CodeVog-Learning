@@ -38,7 +38,7 @@ const BasicLineChart = ( {UpdateChartLinesMethod_ref, finInstruments, lead} ) =>
             })
             .then(res => res.json())
             .then(data => {
-                console.log(data)
+                //console.log(data)
                 let days_n_prices = [] //list to store date and portfolio price
                 let portfolio_time_series = data['data-frame']
 
@@ -139,9 +139,12 @@ const BasicLineChart = ( {UpdateChartLinesMethod_ref, finInstruments, lead} ) =>
                 let series_name = finInstruments[index]['symbol'] //name of chart line is fin tool symbol
 
                 //add dates to list if there is no such date
-                for (let i in time_series_data){
-
-                    series_dates_n_prices.push( [Date.UTC(...time_series_data[i]['date'].split('-')), parseFloat( time_series_data[i]['close_price'])  ])
+                for (const[counter, ts] of Object.entries(time_series_data)){
+                    //console.log(ts)
+                    let [year, month, date] = [...ts['date'].split('-')]
+                    month -= 1
+                    let utc_date = Date.UTC(year, month, date)
+                    series_dates_n_prices.push( [utc_date, parseFloat(ts['close_price']) ])
 
                 }
 
@@ -177,8 +180,8 @@ const BasicLineChart = ( {UpdateChartLinesMethod_ref, finInstruments, lead} ) =>
             series: time_series_list
 
         }
-        console.log(time_series_list)
-        console.log(prev_state['series'])
+//        console.log(time_series_list)
+//        console.log(prev_state['series'])
 
         setOptions(prev_state)
     }

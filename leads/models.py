@@ -83,3 +83,20 @@ class PortfolioOperations(models.Model):
     objects = models.Manager
 
 
+#
+class Invitations(models.Model):
+
+    class InvitationStatusOptions(models.TextChoices):
+        ACTIVE = 'active', 'active'
+        SENT = 'sent', 'sent'
+        EXPIRED = 'expired', 'expired'
+
+    email = models.EmailField()
+    status = models.CharField(choices=InvitationStatusOptions.choices, max_length=30)
+    date = models.DateField(auto_now=True)
+    fin_advisor = models.ForeignKey(Lead, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('email', 'fin_advisor')
+
+    objects = models.Manager

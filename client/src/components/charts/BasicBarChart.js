@@ -30,8 +30,11 @@ const BasicBarChart = ( {user} ) =>{
 
                 //add dates to list if there is no such date
                 for (let day in time_series_data){
+                    //let [year, month, date] = [...day.split('-')]
+                    //month -= 1
+                    //let utc_date = Date.UTC(year, month, date)
 
-                    series_dates_n_prices.push( [Date.UTC(...day.split('-')), parseFloat( time_series_data[day]['price'])  ])
+                    series_dates_n_prices.push( [day, parseFloat( time_series_data[day]['price'])  ]) // day -> utc_date
 
                 }
 
@@ -53,26 +56,27 @@ const BasicBarChart = ( {user} ) =>{
                 //  text: 'Source: WorldClimate.com'
                 //},
                 xAxis: {
-//                    type: "linear",
-//                    tickInterval: 1,
-                    type: 'datetime',
+                    //type: "linear",
+                    //tickInterval: 1,
+                    type: "category", //type: 'datetime',
                     title: {
                             text: 'Days',
                             style: {
                                 fontSize: '15px',
                             }
-                        },
+                    },
                     labels: {
                         style: {
                             fontSize: '13px',
                         }
-                    }
-//                    crosshair: {
-//                        color: 'grey',
-//                        width: 18,
-//                        snap: true,
-//                        //dashStyle: 'shortdot'
-//                    },
+                    },
+
+                    //crosshair: {
+                        //color: 'grey',
+                        //width: 18,
+                        //snap: true,
+                        //dashStyle: 'shortdot'
+                    //},
                 },
                 yAxis: {
                     //type: "linear",
@@ -84,22 +88,47 @@ const BasicBarChart = ( {user} ) =>{
                         style: {
                             fontSize: '12pt',
                         }
-                    }
+                    },
+                    crosshair:{
+                        color: '#8b0000',
+                        zIndex: 3,
+                    },
                 },
                 tooltip: {
+                    positioner: function (a, b, point) {
+                        return {
+                            x: point.plotX,
+                            y: this.chart.plotHeight + this.chart.plotTop
+                        }
+                    },
 
-                    headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-                        '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
-                    footerFormat: '</table>',
+                    formatter: function (){
+                        let points = this.points
+                        let header = '<b>'+points[0].key+'<b><table style="border-spacing: 10px;border-collapse: separate;">'
+                        let body = '' // '<tr><td style="color:{series.color};padding:0">{series.name}: </td>'  <td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>
+
+                        for (const[point, fields] of Object.entries(points)){
+                            body+='<tr><td>'+'<span style="color:'+fields.color+';padding:0>'+fields.series.name+':</span></td><td><b>'+fields.point.y+'</b></td><'+
+                            '<td>'+'<span style="color:'+fields.color+';padding:0>'+fields.series.name+':</span></td><td><b>'+fields.point.y+'</b></td></tr>'
+
+                        }
+
+                        let footer = '</table>'
+                        return (
+                             header+body+footer
+
+                        )
+                    },
+
                     shared: true,
-                    useHTML: true
+                    useHTML: true,
+
                 },
                 plotOptions: {
                     column: {
                         pointPadding: 0,
                         borderWidth: 0,
-                        pointWidth: 15,
+                        pointWidth: 30,
 
                         states: {
                             hover:{
@@ -124,7 +153,6 @@ const BasicBarChart = ( {user} ) =>{
 
             <HighchartsReact
                       highcharts={Highcharts}
-                      //constructorType = { 'mapChart' }  NOT WORKING PROPERLY
                       options={options}
             />
 

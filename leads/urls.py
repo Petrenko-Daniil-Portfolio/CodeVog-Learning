@@ -20,7 +20,8 @@ urlpatterns = [
     path('api/portfolio_value', views.portfolio_value),  # get portfolio value data (it uses POST method)
     path('api/portfolio_values/<advisor_id>', views.portfolio_values_of_advisor),  # get portfolio values of all advisor`s leads
 
-    path('api/send_email/', send_info.create_options),  # create option that will be send to user due to celery schedule
+    path('api/send_email/', send_info.create_operation),  # create operation that will be send to user due to celery schedule
+    path('api/send_invitation/', send_info.create_invitation),  # create and send invitation to became lead of advisor
 
     path('api/lead/auth/', include('rest_auth.urls')),
     path('api/lead/auth/register/', include('rest_auth.registration.urls')),

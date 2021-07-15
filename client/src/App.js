@@ -9,7 +9,8 @@ import Dashboard from './views/app/Dashboard';
 import FinInstruments from './views/app/FinInstruments';
 import TimeSeries from './views/app/TimeSeries.js';
 import NotFound from './views/app/NotFound';
-import PortfolioValue from './views/app/PortfolioValue'
+import PortfolioValue from './views/app/PortfolioValue';
+import Invitations from './views/app/Invitations';
 
 function App () {
     return (
@@ -26,6 +27,7 @@ function App () {
                                     <Route exact path='/login' component={Login} />
                                     <Route exact path='/logout' component={Logout} />
                                     <Route exact path='/dashboard' component={Dashboard} />
+                                    <Route exact path='/invitations/:id' component={Invitations} />
 
                                     <Route exact path='/fin_instruments/:id' component={FinInstruments} />
                                     <Route exact path='/time_series/:id' component={TimeSeries} />

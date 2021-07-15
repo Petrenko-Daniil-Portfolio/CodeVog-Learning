@@ -49,7 +49,8 @@ const Navbar = () => {
 
                         {user.is_staff === true ? (
                             <li>
-                                <Link to='/dashboard' className="nav-link">Clients</Link>
+                                <Link to ={'/invitations/'+user.id} className='nav-link'>Invitations</Link>
+                                <Link to='/dashboard/' className="nav-link">Clients</Link>
                             </li>
                         ) : (
                             <Fragment>
