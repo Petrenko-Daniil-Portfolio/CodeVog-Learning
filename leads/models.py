@@ -13,7 +13,7 @@ from django.core.validators import MinValueValidator
 # Create your models here.
 
 
-class Lead(AbstractUser):
+class Lead(AbstractUser, models.Model):
     username = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
 

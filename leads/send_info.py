@@ -3,6 +3,9 @@ import json
 
 import requests
 
+from django.shortcuts import redirect
+
+from rest_framework.renderers import JSONRenderer
 import pandas as pd
 from django.conf import settings
 from django.core.mail import EmailMessage
@@ -11,8 +14,22 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from django.db.utils import IntegrityError
+
+from django.shortcuts import render
+
 from .models import *
 
+from .forms import LeadForm
+
+from django.http import Http404, HttpResponse
+
+from .serializers import InvitationsSerializer
+
+from invitations.utils import get_invitation_model
+from invitations.models import Invitation
+
+from django.core.exceptions import ObjectDoesNotExist
 
 @api_view(['POST'])
 def create_operation(request):
@@ -33,6 +50,11 @@ def create_operation(request):
         return Response(data={'success': False, 'error': e}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
+        print("Create operation with instrument:")
+        print(request.data['instrument']['id'])
+        print("Instruments in DB:")
+        for tool in Instrument.objects.all():
+            print(tool.id)
         instrument = Instrument.objects.get(id=request.data['instrument']['id'])
         lead = Lead.objects.get(id=request.data['lead']['id'])
 
@@ -40,7 +62,7 @@ def create_operation(request):
         error_message = 'Instrument object with provided id does not exist'
         return Response(data={'success': False, 'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
-    except Lead.DoseNotExits as e:
+    except ObjectDoesNotExist as e:
         error_message = 'Lead object with provided id does not exist'
         return Response(data={'success': False, 'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -121,57 +143,145 @@ def _autofit_columns(df, worksheet):
         worksheet.column_dimensions[get_column_letter(i + 2)].width = column_len  # +2 because columns starts from B
 
 
+# INVITATIONS STUFF
 @api_view(['POST'])
 def create_invitation(request):
 
-    # 1) check if user with such email exists
-    # 2) get all invitations of admin
-    # 3) check if our invitation is in them
-
     # get data from request
     advisor_id = request.data['fin_advisor_id']
-    email = request.data['receiver_email']# 2) get all invitations of admin
+    email = request.data['receiver_email']  # 2) get all invitations of admin
 
-    # # check if such lead already exists
-    # try:
-    #     lead = Lead.objects.get(email=email)
-    #
-    #     # check if lead is fin advisor`s lead
-    #     if lead.fin_advisor.id == advisor_id:
-    #         return Response(data={'success': True, 'description': 'This user is already yours'},
-    #                         status=status.HTTP_200_OK)
-    #
-    # except Lead.DoesNotExist:
-    #     lead = None
-    #
-    # # check if is already invited
-    # advisor = Lead.objects.get(id=advisor_id)
-    # try:
-    #     invite = Invitations.objects.get(email=email, fin_advisor=Lead.objects.get(id=advisor))
-    #     if invite.status == 'sent':
-    #         return Response(data={'success': True, 'description': 'This user already has invitation'},
-    #                         status=status.HTTP_200_OK)
-    #
-    # except Invitations.DoesNotExist:
-    #     invite = None
-    #
-    # # send letter with invitation on passed email
-    #
-    # message = f"""Dear, Investor!
-    #     My name is {advisor.first_name} {advisor.last_name}.
-    #     I want to suggest you creation of new financial portfolio in Berenberg Bank.
-    #     ...
-    #     Please click the link below to registrate
-    # """
-    # letter = EmailMessage(
-    #     subject='Financial Portfolio Creation',
-    #     body=message,
-    #     from_email=settings.EMAIL_HOST_USER,
-    #     to=email,
-    # )
-    #
-    # # letter.send()
+    advisor = Lead.objects.get(id=advisor_id)
+    try:
+        lead = Lead.objects.get(email=email)
+        # check if lead is already fin advisor`s lead
+        if lead.fin_advisor.id == advisor_id:
+            return Response(data={'success': True, 'description': 'This user is already yours'},
+                            status=status.HTTP_200_OK)
+    except ObjectDoesNotExist:
+        pass
 
+    Invitation = get_invitation_model()
 
+    # check if user already has invitation
+    try:
+        old_invitation = Invitation.objects.get(email=email)
+
+        # if he has and it is expired -> delete old invitation
+        if old_invitation.key_expired():
+            old_invitation.delete()
+        else:
+            return Response(data={'success': True, 'description': 'This user already has invitation'},
+                            status=status.HTTP_200_OK)
+    except Invitation.DoesNotExist:
+        pass
+
+    invite = Invitation.create(email, inviter=advisor)
+    invite.send_invitation(request)
 
     return Response(data={'success': True}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET', 'POST'])
+def invite_registration(request, token):
+
+    if request.method == "POST":
+        form = LeadForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+
+            invitation = Invitation.objects.get(key=token.lower())
+            invitation.accepted = True
+            invitation.save()
+            return redirect('http://localhost:3000/login')
+        else:
+            return render(request, 'pages/signup.html', {'form': form})
+
+    # get invite via token
+    try:
+        invitation = Invitation.objects.get(key=token.lower())
+    except Invitation.DoesNotExist:
+        invitation = None
+
+    response = check_invitation_state(invitation)
+    if not response['success']:
+        return render(request, 'pages/signup.html', context={'error_message': response['error-message']})
+
+    # extract data from invitation to pre-populate fields with values
+    fin_advisor = Lead.objects.get(id=invitation.inviter_id)
+    email = invitation.email
+    form = LeadForm(fin_advisor=fin_advisor, email=email)
+    context = {
+        'success': 'true',
+        'form': form,
+    }
+    return render(request, 'pages/signup.html', context)
+
+
+@api_view(['GET'])
+def get_invitations_of_advisor(request, advisor_id):
+    # get all invitations of advisor
+    # sort them by categories ( expired, sent, accepted )
+    # return response with 3 categories
+
+    Invitation = get_invitation_model()
+    invitations_qs = Invitation.objects.filter(inviter_id=advisor_id)
+
+    content = dict()
+
+    content['accepted'] = list(invitations_qs.filter(accepted=True))
+    content['sent'] = get_sent_invitations(invitations_qs)
+    content['expired'] = get_expired_invitations(invitations_qs)
+
+    for category in content:
+        for index, invite in enumerate(content[category]):
+
+            serializer = InvitationsSerializer(invite)
+            content[category][index] = serializer.data
+            content[category][index]['status'] = category
+
+    return Response(data={'success': True, 'data': content}, status=status.HTTP_200_OK)
+
+
+def check_invitation_state(invitation):
+    response = {
+        'success': True,
+        'error-message': None,
+    }
+
+    # No invitation was found.
+    if not invitation:
+        response['success'] = False
+        response['error-message'] = 'Invitation Not Found'
+
+    # The invitation was previously accepted, redirect to the login view
+    elif invitation.accepted:
+        response['success'] = False
+        response['error-message'] = 'Invitation Has Already Been Accepted'
+
+    # The key was expired.
+    elif invitation.key_expired():
+        response['success'] = False
+        response['error-message'] = 'Invitation Has Already Expired'
+
+    return response
+
+
+def get_sent_invitations(invitations_qs):
+    unaccepted_invitations_qs = invitations_qs.filter(accepted=False)
+
+    sent_invitations = []
+    for invitation in unaccepted_invitations_qs:
+        if not invitation.key_expired():
+            sent_invitations.append(invitation)
+
+    return sent_invitations
+
+
+def get_expired_invitations(invitations_qs):
+    expired_invitations = []
+    for invitation in invitations_qs:
+        if invitation.key_expired():
+            expired_invitations.append(invitation)
+
+    return expired_invitations

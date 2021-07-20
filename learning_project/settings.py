@@ -36,6 +36,16 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 
 # Application definition
+# INVITATION
+# delete in case does not work
+# INVITATIONS_EMAIL_SUBJECT_PREFIX = ''
+# EMAIL_SUBJECT_PREFIX = ''
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "CodeVog Fin Advisor App"  # IT WORKS!!!!
+
+INVITATION_MODEL = 'leads.Lead'
+INVITATIONS_INVITATION_EXPIRY = 1
+INVITATIONS_ACCEPT_INVITE_AFTER_SIGNUP = True
+ACCOUNT_ADAPTER = 'invitations.models.InvitationsAdapter'  # delete in futture
 
 INSTALLED_APPS = [
     # django staff
@@ -57,6 +67,9 @@ INSTALLED_APPS = [
     #REST
     'rest_framework',
     'rest_framework.authtoken',
+
+    # django-invitations
+    'invitations', # delete in case does not work
 
     'django_filters',  # did not work for some reason
     'rest_auth',
@@ -186,7 +199,8 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_UNIQUE_EMAIL = True  # Rest Framework config.
 REST_FRAMEWORK = {
     'DATETIME_FORMAT': "%m/%d/%Y %I:%M%P",
-    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.TokenAuthentication',],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.TokenAuthentication', ],
+    # 'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAdminUser', ],
 }
 
 # REDIS
@@ -220,6 +234,9 @@ CACHES = {
         'LOCATION': 'cache:11211',
     }
 }
+
+
+
 
 # CACHES = {
 #     'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',

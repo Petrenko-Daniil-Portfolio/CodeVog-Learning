@@ -18,10 +18,13 @@ from django.urls import path, include, re_path
 from django.conf.urls.static import static
 from django.conf import settings
 
-
+#
+from django.conf.urls import url, include  # delete in case does not work
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('', include('leads.urls')),
+
+    url(r'^invitations/', include('invitations.urls', namespace='invitations')), # delete in case does not work
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

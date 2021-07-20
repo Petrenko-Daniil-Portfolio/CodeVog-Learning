@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from .models import *
+
+from invitations.utils import get_invitation_model
+
 from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed
 
@@ -54,7 +57,7 @@ class PortfolioOperationsSerializer(serializers.ModelSerializer):
 
 class InvitationsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Invitations
+        model = get_invitation_model()
         fields = '__all__'
 
 # class PortfolioOperationsSerializer(serializers.ModelSerializer):

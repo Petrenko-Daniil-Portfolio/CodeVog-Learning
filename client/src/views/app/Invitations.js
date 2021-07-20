@@ -9,7 +9,8 @@ const Invitations = (props) => {
     const [message, setMessage] = useState('Entre email and press "Send" button to invite lead')
     const [messageType, setMessageType] = useState('info')
 
-    const [invitations, setInvitations] = useState([{'email': 'test@gmail.com', 'status': 'Invitation expired'}]) // {'email': 'test@gmail.com', 'status': 'sent'}
+    // Invitation types
+    const [invitations, setInvitations] = useState([])
 
     const [finAdvisor, setFinAdvisor] = useState('')
 
@@ -55,12 +56,36 @@ const Invitations = (props) => {
                     if (user.id != fin_advisor_data.id){ // && user.is_staff == false
                         window.location.replace(Constants.SITE_URL+'login');
                     }
+
+                    // get all invitations of fin_advisor
+                    render_invitations(fin_advisor_data['id'])
+
                 })
             })
           })
         }
         //get all invitations
     }, [])
+
+    const render_invitations = (fin_advisor_id) => {
+        fetch(Constants.SERVER_API+'invitations/'+ fin_advisor_id, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(res => res.json())
+        .then(invitations_data => {
+            console.log(invitations_data)
+            let expired = invitations_data['data']['expired']
+            let sent = invitations_data['data']['sent']
+            let accepted = invitations_data['data']['accepted']
+
+            let all_invitations = expired.concat(sent, accepted)
+
+            setInvitations(all_invitations)
+        })
+    }
 
     const sendInvitation = (receiver_email) => {
        const emailRegex = /^([A-Za-z0-9_\-.])+@([A-Za-z0-9_\-.])+\.([A-Za-z]{2,4})$/;
@@ -80,8 +105,6 @@ const Invitations = (props) => {
             })
             .then(res => res.json())
             .then(response => {
-                console.log("-_-")
-                console.log(response)
 
                 let description = response['description']
                 if (description == "This user is already yours"){
@@ -93,6 +116,7 @@ const Invitations = (props) => {
                 }else{
                     setMessage('Email was send successfully')
                     setMessageType('success')
+                    render_invitations(finAdvisor['id'])
                 }
 
                 //display success
@@ -134,6 +158,7 @@ const Invitations = (props) => {
                         <tr>
                              <th scope="col">Email</th>
                              <th scope="col">Status</th>
+                             <th scope="col">Actions</th>
                         </tr>
                     </thead>
 
@@ -143,15 +168,19 @@ const Invitations = (props) => {
                                 <tr key={index} >
                                     <td> {invitation['email']} </td>
                                     <td>
-                                        {invitation['status'] == "Invitation expired"? (
-                                          <Fragment>
-                                            <span>{invitation['status']}</span>
-                                            <button type="button" className="btn btn-outline-dark ms-5">Resend</button>
-                                          </Fragment>
-                                            ) : (
-                                             <span>{invitation['status']}</span>
-                                            )
+                                        {invitation['status'] == "expired"? <span style={{color: '#4169e1'}}>{invitation['status']}</span>
+                                            : invitation['status'] == "sent"? <span>{invitation['status']}</span>
+                                            : <span style={{color: 'green'}}>{invitation['status']}</span>
 
+                                        }
+
+                                    </td>
+                                    <td>
+                                        {invitation['status'] == "expired"? (
+                                            <button onClick={ () => sendInvitation(invitation['email'])} type="button" className="btn btn-outline-dark">Resend</button>
+                                            ) : (
+                                             <span>None</span>
+                                            )
                                         }
                                     </td>
                                 </tr>

@@ -19,10 +19,14 @@ from django.http import HttpResponse
 
 from django.core.cache import cache
 
+from django.shortcuts import render
+
+
 @api_view(['GET'])
 def test_view(request):
 
     return HttpResponse("Cache: "+cache.get('key', None))
+
 
 class GetAllLeads(generics.ListCreateAPIView):
     queryset = Lead.objects.all()

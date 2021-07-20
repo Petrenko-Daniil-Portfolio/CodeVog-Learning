@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from leads.send_info import *
 from leads.models import *
 from leads.serializers import *
@@ -7,7 +7,7 @@ import requests
 import json
 
 
-class TestSendInfo(TestCase):
+class TestEmail(TestCase):
     def setUp(self):
         # add lead to db
         self.lead_attrs = {
@@ -65,8 +65,11 @@ class TestSendInfo(TestCase):
         }
 
         # you can send data or json, data will not go deeper
-        response = requests.post(url='http://127.0.0.1:8000/api/send_email/', json=data)
-        response = json.loads(response.content)
+        #response = requests.post(url='http://127.0.0.1:8000/api/send_email/', json=data)
+        #response = json.loads(response.content)
+
+        response = self.client.post(path='/api/send_email/', data=data, content_type='application/json')
+
         self.assertEqual(response['success'], False)
         self.assertEqual(response["error"], 'Instrument object with provided id does not exist')
 
@@ -83,6 +86,8 @@ class TestSendInfo(TestCase):
         test_lead = Lead.objects.get(email=self.lead_attrs['email'])
         test_instrument = Instrument.objects.get(symbol=self.instrument_attrs['symbol'])
 
+        all_instruments = Instrument.objects.all()
+
         data = {
             'old_quantity': 0,
             'status': 'update',
@@ -91,12 +96,63 @@ class TestSendInfo(TestCase):
                 'id': test_instrument.id,
             },
             'lead': {
-                'id': test_lead.id,
+                'id': -test_lead.id,  # wrong lead id
             }
         }
 
+        # data = json.dumps(data)
+
         # you can send data or json, data will not go deeper
-        response = requests.post(url='http://127.0.0.1:8000/api/send_email/', json=data)
+        response = self.client.post(path='/api/send_email/', data=data, content_type='application/json')
+
+        # print("\n")
+        # print("_______________")
+        # print("Response:")
+        # print(response.data)
+        # print("_______________")
+        # print("\n")
+
         response = json.loads(response.content)
+
         self.assertEqual(response['success'], False)
         self.assertEqual(response["error"], 'Lead object with provided id does not exist')
+
+
+class TestInvitation(TestCase):
+    def setUp(self):
+        pass
+
+    def test_create_invitation_on_empty_data_failed(self):
+        response = self.client.post('/api/send_invitation/', data={}, content_type='application/json')
+        print('\n')
+        print("________________")
+        print(response.data)
+        print("________________")
+        print("\n")
+
+    def test_create_invitation_on_wrong_advisor_failed(self):
+        pass
+
+    def test_create_invitation_on_empty_email_failed(self):
+        pass
+
+    def test_create_invitation_on_valid_data(self):
+        pass
+
+    def test_get_invite_registration_token_failed(self):
+        pass
+
+    def test_post_invite_registration_token_failed(self):
+        pass
+
+    def test_get_invite_registration_token(self):
+        pass
+
+    def test_post_invite_registration_token(self):
+        pass
+
+    def test_get_invitations_of_advisor_failed(self):
+        pass
+
+    def test_get_invitations_of_advisor(self):
+        pass
