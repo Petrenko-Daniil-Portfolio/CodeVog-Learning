@@ -1,4 +1,5 @@
 import os
+
 from celery import Celery
 from celery.schedules import crontab
 
@@ -11,6 +12,10 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'update_all_time_series': {
         'task': 'leads.tasks.update_all_time_series',
-        'schedule': crontab(minute=45, hour=9),
+        'schedule': crontab(minute=10, hour=9),
+    },
+    'send_email_with_portfolio_changes': {
+        'task': 'leads.tasks.send_email_with_portfolio_changes',
+        'schedule': crontab(minute=30, hour=17)  # 30.0 crontab(minute=27, hour=11)
     },
 }

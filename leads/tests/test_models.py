@@ -31,4 +31,4 @@ class TestModels(TestCase):
 
     # Test Portfolio
     def test_instrument_to_str(self):
-        self.assertEqual(self.instrument.__str__(), self.instrument.name)
+        self.assertEqual(self.instrument.__str__(), self.instrument.symbol)

@@ -13,7 +13,7 @@ from django.core.validators import MinValueValidator
 # Create your models here.
 
 
-class Lead(AbstractUser):
+class Lead(AbstractUser, models.Model):
     username = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
 
@@ -33,6 +33,7 @@ class Lead(AbstractUser):
     def save(self, *args, **kwargs):
         if self.apikey is None:
             self.password = make_password(self.password)
+            self.apikey = {'apikey': 'None'}
         super(Lead, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -66,5 +67,36 @@ class TimeSeriesData(TimeStampedModel):
     date = models.DateField('Date')
     close_price = models.DecimalField(null=True, decimal_places=5, max_digits=12)
     instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
+
+    objects = models.Manager
+
+
+# new model
+class PortfolioOperations(models.Model):
+    timestamp = models.DateTimeField(auto_now=True)
+    operation = models.CharField(max_length=30)
+    instrument = models.ForeignKey(Instrument, on_delete=models.DO_NOTHING)
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE)
+    old_quantity = models.IntegerField(validators=[MinValueValidator(0.0)])
+    new_quantity = models.IntegerField(validators=[MinValueValidator(0.0)])
+
+    objects = models.Manager
+
+
+#
+class Invitations(models.Model):
+
+    class InvitationStatusOptions(models.TextChoices):
+        ACTIVE = 'active', 'active'
+        SENT = 'sent', 'sent'
+        EXPIRED = 'expired', 'expired'
+
+    email = models.EmailField()
+    status = models.CharField(choices=InvitationStatusOptions.choices, max_length=30)
+    date = models.DateField(auto_now=True)
+    fin_advisor = models.ForeignKey(Lead, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('email', 'fin_advisor')
 
     objects = models.Manager

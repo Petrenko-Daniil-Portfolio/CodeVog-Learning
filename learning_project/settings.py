@@ -36,6 +36,16 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 
 # Application definition
+# INVITATION
+# delete in case does not work
+# INVITATIONS_EMAIL_SUBJECT_PREFIX = ''
+# EMAIL_SUBJECT_PREFIX = ''
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "CodeVog Fin Advisor App"  # IT WORKS!!!!
+
+INVITATION_MODEL = 'leads.Lead'
+INVITATIONS_INVITATION_EXPIRY = 1
+INVITATIONS_ACCEPT_INVITE_AFTER_SIGNUP = True
+ACCOUNT_ADAPTER = 'invitations.models.InvitationsAdapter'  # delete in futture
 
 INSTALLED_APPS = [
     # django staff
@@ -50,9 +60,17 @@ INSTALLED_APPS = [
     'leads.apps.LeadsConfig',
 
     # 3-d party
+    # 'django_memcached',
+    'openpyxl',
     'coverage',
+
+    #REST
     'rest_framework',
     'rest_framework.authtoken',
+
+    # django-invitations
+    'invitations', # delete in case does not work
+
     'django_filters',  # did not work for some reason
     'rest_auth',
     'django.contrib.sites',
@@ -130,9 +148,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'leads.Lead'
 
-AUTHENTICATION_BACKENDS = (
-        'django.contrib.auth.backends.ModelBackend',
-    )
+# AUTHENTICATION_BACKENDS = (
+#         'django.contrib.auth.backends.ModelBackend',
+#     )
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
@@ -170,8 +188,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ORIGIN_ALLOW_ALL = True
 
 # Django All Auth config.
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",    "allauth.account.auth_backends.AuthenticationBackend", )
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",
+                           "allauth.account.auth_backends.AuthenticationBackend",)
 SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
@@ -180,14 +199,15 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_UNIQUE_EMAIL = True  # Rest Framework config.
 REST_FRAMEWORK = {
     'DATETIME_FORMAT': "%m/%d/%Y %I:%M%P",
-    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.TokenAuthentication',],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.TokenAuthentication', ],
+    # 'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAdminUser', ],
 }
 
-#REDIS and CELERY
+# REDIS
 REDIS_HOST = '127.0.0.1'
 REDIS_PORT = '6379'
 
-
+# CELERY
 CELERY_BROKER_URL = 'redis://redis:6379'
 CELERY_TIMEZONE = 'Europe/Kiev'
 CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
@@ -195,4 +215,48 @@ CELERY_RESULT_BACKEND = 'redis://redis:6379'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+# EMAIL SETTING
+# DEBUG: 'django.core.mail.backends.console.EmailBackend'
+# LIVE:  'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+
+# CACHE
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': 'cache:11211',
+    }
+}
+
+
+
+
+# CACHES = {
+#     'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#     'LOCATION': 'memcached:11211'
+# }
+# cache:
+# image: memcached
+# ports:
+# - '11211:11211'
+# entrypoint:
+# - memcached
+# - -m
+# 64
+# depends_on:
+# - web
+
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+#         'LOCATION': '0.0.0.0:11211',
+#     }
+# }
 

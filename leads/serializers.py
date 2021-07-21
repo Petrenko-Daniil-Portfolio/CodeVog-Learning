@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Lead, Portfolio, Instrument, TimeSeriesData
+from .models import *
+
+from invitations.utils import get_invitation_model
 
 from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed
@@ -13,7 +15,8 @@ class LeadSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        lead = Lead.objects.create_user(username=validated_data['username'], email=validated_data['email'])
+        # ADDED last argument recently might cause some errors
+        lead = Lead.objects.create_user(username=validated_data['username'], email=validated_data['email'], password=validated_data['password'])
         lead.save()
 
 
@@ -44,6 +47,23 @@ class TimeSeriesDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimeSeriesData
         fields = '__all__'
+
+
+class PortfolioOperationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PortfolioOperations
+        fields = '__all__'
+
+
+class InvitationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_invitation_model()
+        fields = '__all__'
+
+# class PortfolioOperationsSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = PortfolioOperations
+#         fields = '__all__'
 
 
 # class LoginSerializer(serializers.ModelSerializer):

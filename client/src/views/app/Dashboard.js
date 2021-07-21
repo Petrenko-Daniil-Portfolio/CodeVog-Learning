@@ -2,6 +2,8 @@ import React, { useState, useEffect, Fragment } from 'react';
 import * as Constants from '../dependencies';
 import DjangoCSRFToken from 'django-react-csrftoken'
 
+import BasicBarChart from '../../components/charts/BasicBarChart';
+
 const Dashboard = () => {
   const [user, setUser] = useState('');
 
@@ -193,8 +195,8 @@ const Dashboard = () => {
                 <button onClick={ () => findTimeSeries()} className="btn btn-primary ms-2" type="button">Find Time Series</button>
                 <button onClick={ () => updateAllTimeSeries()} className="btn btn-secondary ms-2" type="button">Update All Time Series</button>
 
-                </form>
-                <br/>
+              </form>
+              <br/>
 
               <table className="table table-striped">
                   <thead>
@@ -209,7 +211,6 @@ const Dashboard = () => {
                   <tbody>
 
                         <tr className={'alert alert-'+messageType}><td colSpan='4'> {message} </td></tr>
-
 
                         {finInstruments.map(instrument => {
                             return(
@@ -229,6 +230,14 @@ const Dashboard = () => {
                   </tbody>
 
               </table>
+
+              {user != '' &&
+                /* Bar chart will load here */
+                <div>
+
+                <BasicBarChart user = {user} />
+                </div>
+              }
 
             </Fragment>
           )}
