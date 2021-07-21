@@ -120,14 +120,37 @@ class TestEmail(TestCase):
 
 class TestInvitation(TestCase):
     def setUp(self):
-        pass
+        # add lead to db
+        self.lead_attrs = {
+            'username': 'test name',
+            'email': 'test@gmail.com',
+            'password': '1111'
+        }
+        self.lead = LeadSerializer(data=self.lead_attrs)
+        self.lead.is_valid(raise_exception=True)
 
     def test_create_invitation_on_empty_data_failed(self):
         response = self.client.post('/api/send_invitation/', data={}, content_type='application/json')
-        print('\n')
-        print("________________")
+        response = response.data
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['description'], 'Please pass "fin_advisor_id" and "receiver_email" in request body')
+
+    def test_create_invitation_passing_lead_failed(self):
+        # passing lead instead of fin advisor
+        self.lead.create(self.lead.validated_data)
+        test_lead = Lead.objects.get(email=self.lead_attrs['email'])
+
+        data = {
+            'fin_advisor_id': test_lead.id,
+            'receiver_email': "test_email@gmail.com"
+        }
+
+        response = self.client.post(path='/api/send_invitation/', data=data, content_type='application/json')
+        print("\n")
+        print("_______________")
+        print("Response:")
         print(response.data)
-        print("________________")
+        print("_______________")
         print("\n")
 
     def test_create_invitation_on_wrong_advisor_failed(self):

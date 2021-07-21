@@ -31,6 +31,7 @@ from invitations.models import Invitation
 
 from django.core.exceptions import ObjectDoesNotExist
 
+
 @api_view(['POST'])
 def create_operation(request):
     """ Endpoin to call when user portfolio is edited. Creates new option instance.
@@ -47,7 +48,8 @@ def create_operation(request):
         new_quantity = request.data['instrument']['quantity']
         operation = request.data['status']
     except KeyError as e:
-        return Response(data={'success': False, 'error': e}, status=status.HTTP_400_BAD_REQUEST)
+        message = "Plase pass 'old_quantity', 'instrument' with 'quantity' and 'status' in body of request"
+        return Response(data={'success': False, 'error': str(e)+": "+message}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         print("Create operation with instrument:")
@@ -148,10 +150,19 @@ def _autofit_columns(df, worksheet):
 def create_invitation(request):
 
     # get data from request
-    advisor_id = request.data['fin_advisor_id']
-    email = request.data['receiver_email']  # 2) get all invitations of admin
+    try:
+        advisor_id = request.data['fin_advisor_id']
+        email = request.data['receiver_email']  # 2) get all invitations of admin
+    except KeyError:
+        message = 'Please pass "fin_advisor_id" and "receiver_email" in request body'
+        return Response(data={'success': False, 'description': message}, status=status.HTTP_400_BAD_REQUEST)
 
-    advisor = Lead.objects.get(id=advisor_id)
+    try:
+        advisor = Lead.objects.get(id=advisor_id, is_staff=True)
+    except ObjectDoesNotExist:
+        message = "Fin advisor with provided id does not exist"
+        return Response(data={'success': False, 'description': message}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
         lead = Lead.objects.get(email=email)
         # check if lead is already fin advisor`s lead

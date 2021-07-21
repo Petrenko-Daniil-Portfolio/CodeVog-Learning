@@ -1,7 +1,7 @@
 from django.urls import include, path
 from leads import views
 from leads import send_info
-
+from leads import excel_statistics
 
 # from django.conf.urls import url, include   delete in case does not work
 # from invitations.views import AcceptInvite
@@ -33,6 +33,8 @@ urlpatterns = [
     # INVITATION REGISTRATION PAGE
     path('invitations/accept-invite/<token>', send_info.invite_registration, name='account_signup'),
     path('api/invitations/<advisor_id>', send_info.get_invitations_of_advisor),  # get list of invitations
+
+    path('api/statistics/<lead_id>',  excel_statistics.download_portfolio_as_excel),  # download user portfolio as excel
 
     # url(r'^invitations/accept-invite/(?P<key>\w+)/?$', AcceptInvite.as_view(), name='accept-invite'),
 

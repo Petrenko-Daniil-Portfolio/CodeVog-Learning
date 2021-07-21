@@ -80,7 +80,6 @@ def portfolio_rows_of_lead(request, lead_id):
 
 
 # celery related
-
 @api_view(['POST', 'PUT', 'PATCH', 'DELETE'])
 def time_series(request):
     """Endpoint to create time_series for instrument
@@ -119,6 +118,7 @@ def time_series(request):
     return Response(data={'success': True}, status=status.HTTP_200_OK)
 
 
+# Portfolio value functions
 @api_view(['POST'])
 def portfolio_value(request):
     """Endpoint to get portfolio value time series dataframe

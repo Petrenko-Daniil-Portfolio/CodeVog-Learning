@@ -6,7 +6,7 @@ Hello,
 
 You ({{ email }}) have been invited to join CodeVog Fin Advisor app to create financial portfolio and keep track of your financial instruments.
 
-If you'd like to join, please go to {{ invite_url }}
+If you'd like to join, please go to <a href={{ invite_url }}> sign up page </a>
 
 {% endblocktrans %}
 {% endautoescape %}

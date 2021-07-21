@@ -10,6 +10,7 @@ const PortfolioValue = (props) =>{
     const [lead, setLead] = useState(''); // lead is the one whose id was passed in url
 
     const [chartTimeSeries, setChartTimeSeries] = useState({})
+    const [rawChartTimeSeries, setRawChartTimeSeries] = useState({})
 
     useEffect( () => {
         if (localStorage.getItem('token') === null) {
@@ -55,6 +56,7 @@ const PortfolioValue = (props) =>{
                     .then(res => res.json())
                     .then(data => {
                         console.log(data)
+                        setRawChartTimeSeries(data)
                         let days_n_prices = [] //list to store date and portfolio price
                         let portfolio_time_series = data['data-frame']
 
@@ -74,19 +76,45 @@ const PortfolioValue = (props) =>{
                 })
             })
         }
-
-
-
     }, [])
 
-    return(
+    const downloadPortfolioAsExcel = () => {
 
+        // send request to server api to get excel file with portfolio information
+        let req_url = Constants.SERVER_API + "statistics/" + lead.id
+        fetch(req_url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(rawChartTimeSeries)
+        })
+        .then(response => {
+            // response.blob() - reads request till its end and results(returns) in a blob object
+            return response.blob()})
+        .then(blob => {
+            //blob (Binary Large Object) - represent binary data, and they can be large, but neither is required
+
+            //URL.createObjectURL(blob) - method creates DOMString, containing URL representing the object given in the parameter.
+            var file = window.URL.createObjectURL(blob);
+
+            //Location.assign(file) - method causes the window to load and display the document at the URL specified
+            window.location.assign(file);
+        })
+
+
+    }
+
+    return(
         <div>
             {/* <h2>Portfolio Value Page</h2> */}
 
             {Object.entries(chartTimeSeries).length > 0  &&
-            <LineChart chartTimeSeries = {chartTimeSeries}/>
+                <LineChart chartTimeSeries = {chartTimeSeries}/>
+
             }
+            <br />
+            <button onClick = { () => downloadPortfolioAsExcel() } type="button" className="btn btn-primary w-100">Download Portfolio As Excel</button>
         </div>
 
     )
